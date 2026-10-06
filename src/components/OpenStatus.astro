@@ -1,0 +1,19 @@
+---
+import { contact, t, type Lang } from '../data/site';
+
+interface Props {
+  lang: Lang;
+  class?: string;
+}
+const { lang, class: className } = Astro.props;
+---
+
+<span
+  class={className}
+  data-open-status
+  data-opens={contact.opens}
+  data-closes={contact.closes}
+  data-closed-days={contact.closedDays.join(',')}
+  data-open-text={t[lang].openNow}
+  data-closed-text={t[lang].closedNow}
+>{t[lang].hours}</span>

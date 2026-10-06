@@ -1,0 +1,690 @@
+---
+import { Image } from 'astro:assets';
+import '@fontsource-variable/bricolage-grotesque';
+import '@fontsource-variable/instrument-sans';
+import Base from '../layouts/Base.astro';
+import OpenStatus from './OpenStatus.astro';
+import { contact, dayName, images, langPath, malice, price, shortDate, specials, t, type Lang } from '../data/site';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const s = t[lang];
+const other: Lang = lang === 'sl' ? 'en' : 'sl';
+---
+
+<Base lang={lang} noindex themeColor="#f4f2ec">
+  <div class="c">
+    <header class="bar">
+      <a href="#top" class="logo" aria-label={contact.name}>
+        <Image src={images.logo} alt="Arbor" width={200} loading="eager" />
+      </a>
+      <nav aria-label="Main">
+        <a href="#malice">{s.nav.lunch}</a>
+        <a href="#specialitete">{s.nav.specials}</a>
+        <a href="#arbor">{s.nav.about}</a>
+        <a href="#kontakt">{s.nav.contact}</a>
+      </nav>
+      <div class="bar-end">
+        <a class="lang" href={langPath(other, '/c/')} lang={other}>{other.toUpperCase()}</a>
+        <a class="btn yellow" href={`tel:${contact.tel}`}>{s.call}</a>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="bento">
+        <div class="tile hero">
+          <OpenStatus lang={lang} class="pill" />
+          <h1>{s.tagline}</h1>
+          <p>{s.heroSub}</p>
+          <div class="cta">
+            <a class="btn yellow" href={`tel:${contact.tel}`}>{contact.phone}</a>
+            <a class="btn ghost" href={contact.maps}>{s.directions} ↗</a>
+          </div>
+        </div>
+
+        <div class="tile today">
+          <p class="label">{s.lunchToday}</p>
+          {
+            malice.map((d) => (
+              <div class="panel" data-day-panel={d.day} data-active={d.day === 1 ? '' : undefined}>
+                <p class="when">
+                  {dayName(d.day, lang)}, {shortDate(d.date)}
+                </p>
+                <ol>
+                  {d.items.map((item) => <li>{item}</li>)}
+                </ol>
+              </div>
+            ))
+          }
+          <a class="more" href="#malice">{s.lunchWeek} →</a>
+        </div>
+
+        <figure class="tile photo">
+          <Image
+            src={images.arbor1}
+            alt=""
+            widths={[480, 800, 1200]}
+            sizes="(min-width: 900px) 40vw, 100vw"
+            loading="eager"
+            fetchpriority="high"
+          />
+        </figure>
+
+        <div class="tile fact">
+          <p class="label">{s.hoursLabel}</p>
+          <p class="big">{s.hours}</p>
+          <p class="small">{s.sunday}</p>
+        </div>
+        <a class="tile fact" href={contact.maps}>
+          <p class="label">{s.addressLabel}</p>
+          <p class="big">{contact.street}</p>
+          <p class="small">{contact.city} · {s.view}</p>
+        </a>
+        <a class="tile fact dark" href={contact.menuPdf}>
+          <p class="label">PDF</p>
+          <p class="big">{s.menuCta} ↗</p>
+          <p class="small">{s.award}</p>
+        </a>
+      </section>
+
+      <section id="malice">
+        <div class="head">
+          <h2>{s.lunchWeek}</h2>
+          <p>{s.lunchNote}</p>
+        </div>
+        <ul class="week rail">
+          {
+            malice.map((d) => (
+              <li class="tile" data-day={d.day}>
+                <p class="day">
+                  {dayName(d.day, lang)}
+                  <span>{shortDate(d.date)}</span>
+                </p>
+                <ol>
+                  {d.items.map((item) => <li>{item}</li>)}
+                </ol>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section id="specialitete">
+        <div class="head">
+          <h2>{s.specialsTitle}</h2>
+          <p>{s.specialsSub}</p>
+        </div>
+        <ul class="dishes rail">
+          {
+            specials.map((d) => (
+              <li class="tile">
+                <figure>
+                  <Image src={d.image} alt={d.name[lang]} widths={[400, 640, 900]} sizes="(min-width: 900px) 31vw, 78vw" />
+                  <span class="chip">{price(d.price)}</span>
+                </figure>
+                <h3>{d.name[lang]}</h3>
+                <p>{d.desc[lang]}</p>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section class="about" id="arbor">
+        <div class="tile copy">
+          <h2>{s.aboutTitle}</h2>
+          {s.about.slice(0, 2).map((p) => <p>{p}</p>)}
+          <ul class="chips">
+            <li><b>{contact.seatsInside}</b> {s.seatsInside}</li>
+            <li><b>{contact.seatsTerrace}</b> {s.seatsTerrace}</li>
+          </ul>
+        </div>
+        <figure class="tile">
+          <Image src={images.arbor2} alt="" widths={[400, 640, 900]} sizes="(min-width: 900px) 25vw, 50vw" />
+        </figure>
+        <figure class="tile">
+          <Image src={images.arbor3} alt="" widths={[400, 640, 900]} sizes="(min-width: 900px) 25vw, 50vw" />
+        </figure>
+      </section>
+
+      <section class="tile contact" id="kontakt">
+        <div>
+          <h2>{s.contactTitle}</h2>
+          <p>{s.contactSub}</p>
+          <a class="phone" href={`tel:${contact.tel}`}>{contact.phone}</a>
+        </div>
+        <ul>
+          <li>
+            <span>{s.addressLabel}</span>
+            <a href={contact.maps}>{contact.street}, {contact.city} ↗</a>
+          </li>
+          <li>
+            <span>{s.hoursLabel}</span>
+            {s.hours} · {s.sunday}
+          </li>
+          <li>
+            <span>E-mail</span>
+            <a href={`mailto:${contact.email}`}>{contact.email}</a>
+          </li>
+        </ul>
+      </section>
+    </main>
+
+    <footer>
+      <span>© Arbor d.o.o.</span>
+      <a href="#">{s.privacy}</a>
+    </footer>
+
+    <div class="dock">
+      <a class="btn yellow" href={`tel:${contact.tel}`}>{s.call}</a>
+      <a class="btn" href={contact.maps}>{s.directions}</a>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .c {
+    --bg: #f4f2ec;
+    --card: #fff;
+    --ink: #14201a;
+    --muted: #5f6a62;
+    --green: #0b4b24;
+    --yellow: #f4c531;
+    --r: 24px;
+    --gap: 12px;
+    --display: 'Bricolage Grotesque Variable', system-ui, sans-serif;
+    --sans: 'Instrument Sans Variable', system-ui, sans-serif;
+    min-height: 100vh;
+    padding: 0 clamp(12px, 2.5vw, 32px);
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.5 var(--sans);
+  }
+  main,
+  .bar,
+  footer {
+    max-width: 1320px;
+    margin-inline: auto;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--display);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+  }
+  h2 {
+    font-size: clamp(28px, 3.6vw, 44px);
+    line-height: 1.05;
+  }
+  .tile {
+    border-radius: var(--r);
+    background: var(--card);
+    overflow: hidden;
+  }
+  .label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 0 22px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: transform 0.15s;
+  }
+  .btn:hover {
+    transform: translateY(-2px);
+  }
+  .btn.yellow {
+    background: var(--yellow);
+    color: var(--ink);
+  }
+  .btn.ghost {
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.5);
+  }
+
+  /* Top bar */
+  .bar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 4px;
+    background: var(--bg);
+  }
+  .logo :global(img) {
+    width: 92px;
+  }
+  .bar nav {
+    display: flex;
+    gap: 4px;
+  }
+  .bar nav a {
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 15px;
+    text-decoration: none;
+  }
+  .bar nav a:hover {
+    background: #e6e2d6;
+  }
+  .bar-end {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .bar .btn {
+    min-height: 40px;
+  }
+  .lang {
+    font-weight: 700;
+    font-size: 14px;
+    text-decoration: none;
+  }
+
+  /* Bento */
+  .bento {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: var(--gap);
+  }
+  .hero {
+    grid-column: span 7;
+    grid-row: span 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: clamp(24px, 4vw, 56px);
+    background: var(--green);
+    color: #fff;
+  }
+  .c :global(.pill) {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.14);
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .c :global(.pill)::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #9aa59d;
+  }
+  .c :global(.pill[data-state='open'])::before {
+    background: #6fe08f;
+    box-shadow: 0 0 0 4px rgb(111 224 143 / 0.25);
+  }
+  .c :global(.pill[data-state='closed'])::before {
+    background: #ff8a70;
+  }
+  h1 {
+    margin-top: auto;
+    padding-top: 48px;
+    font-size: clamp(38px, 5.6vw, 80px);
+    line-height: 0.98;
+  }
+  .hero > p {
+    max-width: 30em;
+    margin-top: 20px;
+    font-size: clamp(16px, 1.4vw, 19px);
+    opacity: 0.85;
+  }
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 28px;
+  }
+  .today {
+    grid-column: span 5;
+    display: flex;
+    flex-direction: column;
+    padding: clamp(20px, 2.4vw, 32px);
+    background: var(--yellow);
+  }
+  .panel {
+    display: none;
+  }
+  .panel[data-active] {
+    display: block;
+  }
+  .when {
+    margin-top: 6px;
+    font: 700 clamp(24px, 2.6vw, 34px) / 1.1 var(--display);
+    letter-spacing: -0.02em;
+  }
+  .today ol,
+  .week ol {
+    counter-reset: n;
+  }
+  .today ol {
+    margin-top: 16px;
+  }
+  .today ol li,
+  .week ol li {
+    counter-increment: n;
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    align-items: baseline;
+    padding: 9px 0;
+    border-top: 1.5px solid rgb(20 32 26 / 0.14);
+    font-weight: 500;
+  }
+  .today ol li::before,
+  .week ol li::before {
+    content: counter(n);
+    font: 700 14px/1 var(--display);
+    opacity: 0.55;
+  }
+  .more {
+    margin-top: auto;
+    padding-top: 16px;
+    font-weight: 700;
+    font-size: 15px;
+    text-decoration: none;
+  }
+  .more:hover {
+    text-decoration: underline;
+  }
+  .photo {
+    grid-column: span 5;
+    min-height: 240px;
+  }
+  .photo :global(img),
+  .about figure :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .fact {
+    grid-column: span 4;
+    padding: 24px;
+    text-decoration: none;
+    transition: transform 0.15s;
+  }
+  a.fact:hover {
+    transform: translateY(-3px);
+  }
+  .fact.dark {
+    background: var(--ink);
+    color: #fff;
+  }
+  .big {
+    margin-top: 10px;
+    font: 700 clamp(20px, 2vw, 26px) / 1.15 var(--display);
+    letter-spacing: -0.02em;
+  }
+  .small {
+    margin-top: 6px;
+    font-size: 14px;
+    opacity: 0.65;
+  }
+
+  /* Sections */
+  main > section + section {
+    margin-top: clamp(56px, 7vw, 96px);
+    scroll-margin-top: 80px;
+  }
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: 8px 32px;
+    margin-bottom: 20px;
+    padding: 0 4px;
+  }
+  .head p {
+    max-width: 34em;
+    color: var(--muted);
+  }
+
+  .week {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--gap);
+  }
+  .week > li {
+    padding: 22px;
+  }
+  .week > li[data-today] {
+    background: var(--yellow);
+  }
+  .day {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 14px;
+    font: 700 22px/1.1 var(--display);
+    letter-spacing: -0.02em;
+  }
+  .day span {
+    font: 600 13px/1 var(--sans);
+    letter-spacing: 0;
+    opacity: 0.55;
+  }
+  .week ol li {
+    font-size: 15px;
+    line-height: 1.35;
+  }
+
+  .dishes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--gap);
+  }
+  .dishes > li {
+    padding: 10px 10px 22px;
+  }
+  .dishes figure {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 4 / 3;
+    border-radius: 16px;
+  }
+  .dishes :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .chip {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: var(--yellow);
+    font: 700 16px/1.2 var(--display);
+  }
+  h3 {
+    margin: 16px 12px 0;
+    font-size: 22px;
+    line-height: 1.15;
+  }
+  .dishes p {
+    margin: 4px 12px 0;
+    font-size: 15px;
+    color: var(--muted);
+  }
+
+  .about {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: var(--gap);
+  }
+  .copy {
+    padding: clamp(24px, 4vw, 56px);
+  }
+  .copy p {
+    max-width: 36em;
+    margin-top: 16px;
+    color: var(--muted);
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 28px;
+  }
+  .chips li {
+    padding: 8px 16px;
+    border-radius: 999px;
+    background: var(--bg);
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .chips b {
+    font: 700 16px/1 var(--display);
+    color: var(--green);
+  }
+  .about figure {
+    min-height: 320px;
+  }
+
+  .contact {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    align-items: end;
+    gap: 40px;
+    padding: clamp(28px, 5vw, 72px);
+    background: var(--green);
+    color: #fff;
+  }
+  .contact > div > p {
+    margin-top: 12px;
+    opacity: 0.8;
+  }
+  .phone {
+    display: inline-block;
+    margin-top: 24px;
+    font: 700 clamp(30px, 5vw, 68px) / 1 var(--display);
+    letter-spacing: -0.03em;
+    color: var(--yellow);
+    text-decoration: none;
+  }
+  .contact li {
+    padding: 14px 0;
+    border-top: 1.5px solid rgb(255 255 255 / 0.2);
+    font-weight: 500;
+  }
+  .contact li span {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+  .contact li a {
+    text-decoration: none;
+  }
+  .contact li a:hover {
+    text-decoration: underline;
+  }
+
+  footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 28px 4px 72px;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .dock {
+    display: none;
+  }
+
+  @media (max-width: 900px) {
+    .bar nav {
+      display: none;
+    }
+    .hero,
+    .today,
+    .photo {
+      grid-column: 1 / -1;
+      grid-row: auto;
+    }
+    .today {
+      order: -1;
+    }
+    .fact {
+      grid-column: span 6;
+    }
+    .fact.dark {
+      grid-column: 1 / -1;
+    }
+    .rail {
+      display: flex;
+      margin-inline: calc(-1 * clamp(12px, 2.5vw, 32px));
+      padding-inline: clamp(12px, 2.5vw, 32px);
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline: clamp(12px, 2.5vw, 32px);
+      scrollbar-width: none;
+    }
+    .rail > li {
+      flex: 0 0 min(78vw, 320px);
+      scroll-snap-align: start;
+    }
+    .about,
+    .contact {
+      grid-template-columns: 1fr 1fr;
+    }
+    .copy,
+    .contact > * {
+      grid-column: 1 / -1;
+    }
+    .about figure {
+      min-height: 0;
+      aspect-ratio: 3 / 4;
+    }
+  }
+  @media (max-width: 640px) {
+    .fact {
+      grid-column: 1 / -1;
+    }
+    .bar .btn {
+      display: none;
+    }
+    footer {
+      padding-bottom: 104px;
+    }
+    .dock {
+      position: fixed;
+      inset: auto 0 0;
+      z-index: 20;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      background: rgb(244 242 236 / 0.92);
+      backdrop-filter: blur(10px);
+    }
+  }
+</style>

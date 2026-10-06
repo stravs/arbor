@@ -1,0 +1,698 @@
+---
+import { Image } from 'astro:assets';
+import '@fontsource/marcellus';
+import '@fontsource-variable/jost';
+import Base from '../layouts/Base.astro';
+import OpenStatus from './OpenStatus.astro';
+import {
+  categories,
+  contact,
+  dayName,
+  images,
+  malice,
+  price,
+  langPath,
+  shortDate,
+  specials,
+  t,
+  type Lang,
+} from '../data/site';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const s = t[lang];
+const other: Lang = lang === 'sl' ? 'en' : 'sl';
+const numerals = ['I', 'II', 'III', 'IV', 'V'];
+---
+
+<Base lang={lang} noindex themeColor="#0b1811">
+  <div class="b">
+    <section class="hero" id="top">
+      <Image
+        class="hero-bg"
+        src={images.arbor1}
+        alt=""
+        widths={[800, 1400, 2000, 2400]}
+        sizes="100vw"
+        loading="eager"
+        fetchpriority="high"
+      />
+      <header>
+        <nav aria-label="Main">
+          <a href="#arbor">{s.nav.about}</a>
+          <a href="#specialitete">{s.nav.specials}</a>
+        </nav>
+        <a href="#top" class="logo" aria-label={contact.name}>
+          <Image src={images.logo} alt="Arbor" width={320} loading="eager" />
+        </a>
+        <nav aria-label="More">
+          <a href="#malice">{s.nav.lunch}</a>
+          <a href="#kontakt">{s.nav.contact}</a>
+          <a href={langPath(other, '/b/')} lang={other}>{other.toUpperCase()}</a>
+        </nav>
+      </header>
+
+      <div class="hero-copy">
+        <p class="eyebrow">{s.eyebrow}</p>
+        <h1>{s.tagline}</h1>
+        <div class="orn" aria-hidden="true"><i></i></div>
+        <p class="sub">{s.heroSub}</p>
+        <div class="cta">
+          <a class="btn solid" href={`tel:${contact.tel}`}>{s.ctaReserve}</a>
+          <a class="btn" href="#specialitete">{s.ctaSpecials}</a>
+        </div>
+      </div>
+
+      <ul class="facts">
+        <li>{s.hours}</li>
+        <li><OpenStatus lang={lang} /></li>
+        <li><a href={contact.maps}>{contact.street}, Bled</a></li>
+      </ul>
+    </section>
+
+    <main>
+      <section class="about" id="arbor">
+        <div class="about-copy">
+          <p class="eyebrow">Arbor</p>
+          <h2>{s.aboutTitle}</h2>
+          <div class="orn left" aria-hidden="true"><i></i></div>
+          {s.about.map((p) => <p>{p}</p>)}
+          <dl>
+            <div>
+              <dt>{contact.seatsInside}</dt>
+              <dd>{s.seatsInside}</dd>
+            </div>
+            <div>
+              <dt>{contact.seatsTerrace}</dt>
+              <dd>{s.seatsTerrace}</dd>
+            </div>
+          </dl>
+        </div>
+        <div class="arches">
+          <figure>
+            <Image src={images.arbor2} alt="" widths={[360, 600, 900]} sizes="(min-width: 900px) 24vw, 44vw" />
+          </figure>
+          <figure>
+            <Image src={images.arbor3} alt="" widths={[360, 600, 900]} sizes="(min-width: 900px) 24vw, 44vw" />
+          </figure>
+        </div>
+      </section>
+
+      <section class="specials" id="specialitete">
+        <div class="head">
+          <p class="eyebrow">{s.specialsSub}</p>
+          <h2>{s.specialsTitle}</h2>
+          <div class="orn" aria-hidden="true"><i></i></div>
+        </div>
+        <div class="cats">
+          {
+            categories.map((c) => {
+              const dishes = specials.filter((d) => d.category === c.id);
+              return (
+                <article>
+                  <figure>
+                    <Image
+                      src={dishes[0].image}
+                      alt={dishes[0].name[lang]}
+                      widths={[360, 600, 900]}
+                      sizes="(min-width: 900px) 28vw, 90vw"
+                    />
+                  </figure>
+                  <h3>{c.label[lang]}</h3>
+                  <ul>
+                    {dishes.map((d) => (
+                      <li>
+                        <p class="name">
+                          <span>{d.name[lang]}</span>
+                          <i aria-hidden="true" />
+                          <span class="price">{price(d.price)}</span>
+                        </p>
+                        <p class="desc">{d.desc[lang]}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              );
+            })
+          }
+        </div>
+        <p class="center"><a class="btn" href={contact.menuPdf}>{s.menuCta}</a></p>
+      </section>
+
+      <section class="lunch" id="malice">
+        <div class="frame">
+          <div class="head">
+            <p class="eyebrow">{s.lunchHours}</p>
+            <h2>{s.lunchWeek}</h2>
+            <div class="orn" aria-hidden="true"><i></i></div>
+          </div>
+          <ul class="week">
+            {
+              malice.map((d) => (
+                <li data-day={d.day}>
+                  <p class="day">
+                    {dayName(d.day, lang)}
+                    <span>
+                      {shortDate(d.date)}
+                      <b>· {s.today}</b>
+                    </span>
+                  </p>
+                  <ol>
+                    {d.items.map((item, i) => (
+                      <li>
+                        <span aria-hidden="true">{numerals[i]}</span>
+                        {item}
+                      </li>
+                    ))}
+                  </ol>
+                </li>
+              ))
+            }
+          </ul>
+          <p class="note">{s.lunchNote}</p>
+        </div>
+      </section>
+
+      <section class="contact" id="kontakt">
+        <figure>
+          <Image src={images.golazTall} alt="" widths={[360, 600, 900]} sizes="(min-width: 900px) 30vw, 70vw" />
+        </figure>
+        <div>
+          <p class="eyebrow">{s.contactSub}</p>
+          <h2>{s.contactTitle}</h2>
+          <a class="phone" href={`tel:${contact.tel}`}>{contact.phone}</a>
+          <dl class="details">
+            <div>
+              <dt>{s.addressLabel}</dt>
+              <dd>
+                {contact.street}, {contact.city}<br />
+                <a href={contact.maps}>{s.directions}</a>
+              </dd>
+            </div>
+            <div>
+              <dt>{s.hoursLabel}</dt>
+              <dd>{s.hours}<br />{s.sunday}</dd>
+            </div>
+            <div>
+              <dt>E-mail</dt>
+              <dd><a href={`mailto:${contact.email}`}>{contact.email}</a></dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>{s.award}</p>
+      <p>© Arbor d.o.o. · <a href="#">{s.privacy}</a></p>
+    </footer>
+  </div>
+</Base>
+
+<style>
+  .b {
+    --bg: #0b1811;
+    --panel: #10231a;
+    --cream: #efe8d8;
+    --muted: #a3b0a6;
+    --gold: #c8a868;
+    --line: rgb(200 168 104 / 0.35);
+    --display: 'Marcellus', 'Times New Roman', serif;
+    --sans: 'Jost Variable', system-ui, sans-serif;
+    --pad: clamp(20px, 5vw, 80px);
+    background: var(--bg);
+    color: var(--cream);
+    font: 300 18px/1.65 var(--sans);
+    overflow-x: clip;
+  }
+
+  .eyebrow {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--display);
+    font-weight: 400;
+    text-wrap: balance;
+  }
+  h2 {
+    margin-top: 16px;
+    font-size: clamp(32px, 4.4vw, 58px);
+    line-height: 1.1;
+  }
+  .orn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin: 28px auto;
+    color: var(--gold);
+  }
+  .orn::before,
+  .orn::after {
+    content: '';
+    width: 64px;
+    height: 1px;
+    background: currentColor;
+  }
+  .orn i {
+    width: 8px;
+    height: 8px;
+    border: 1px solid currentColor;
+    transform: rotate(45deg);
+  }
+  .orn.left {
+    justify-content: flex-start;
+    margin-inline: 0;
+  }
+  .orn.left::before {
+    display: none;
+  }
+  .btn {
+    display: inline-block;
+    padding: 14px 30px;
+    border: 1px solid var(--gold);
+    color: var(--cream);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition:
+      background 0.25s,
+      color 0.25s;
+  }
+  .btn:hover,
+  .btn.solid {
+    background: var(--gold);
+    color: var(--bg);
+  }
+  .btn.solid:hover {
+    background: var(--cream);
+    border-color: var(--cream);
+  }
+  .center {
+    margin-top: 64px;
+    text-align: center;
+  }
+
+  /* Hero */
+  .hero {
+    position: relative;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    min-height: min(100svh, 980px);
+    padding: 14px;
+    text-align: center;
+    isolation: isolate;
+  }
+  .hero :global(.hero-bg) {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(ellipse at center, rgb(11 24 17 / 0.78), rgb(11 24 17 / 0.45) 75%),
+      linear-gradient(rgb(11 24 17 / 0.55), rgb(11 24 17 / 0.25) 35%, rgb(11 24 17 / 0.5) 70%, var(--bg));
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    inset: 14px;
+    border: 1px solid var(--line);
+    pointer-events: none;
+  }
+  header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 32px;
+    padding: 28px clamp(16px, 4vw, 56px) 0;
+  }
+  header nav {
+    display: flex;
+    gap: 36px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+  header nav:last-child {
+    justify-content: flex-end;
+  }
+  header nav a {
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  header nav a:hover {
+    color: var(--gold);
+  }
+  .logo :global(img) {
+    width: 150px;
+  }
+  .hero-copy {
+    align-self: center;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 24px;
+  }
+  h1 {
+    margin-top: 24px;
+    font-size: clamp(38px, 6.4vw, 88px);
+    line-height: 1.06;
+  }
+  .sub {
+    max-width: 34em;
+    margin: 0 auto;
+    color: #cdd5cf;
+  }
+  .cta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 40px;
+  }
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 0;
+    padding: 0 24px 32px;
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .facts li + li::before {
+    content: '◆';
+    margin: 0 18px;
+    font-size: 7px;
+    vertical-align: 3px;
+    color: var(--gold);
+  }
+  .facts a {
+    text-decoration: none;
+  }
+  .facts :global([data-state='open']) {
+    color: var(--gold);
+  }
+
+  /* About */
+  .about {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: clamp(40px, 7vw, 120px);
+    padding: clamp(80px, 11vw, 160px) var(--pad);
+  }
+  .about-copy > p:not(.eyebrow) {
+    max-width: 32em;
+    margin-top: 18px;
+    color: var(--muted);
+  }
+  .about dl {
+    display: flex;
+    gap: 56px;
+    margin: 40px 0 0;
+  }
+  .about dt {
+    font: 400 52px/1 var(--display);
+    color: var(--gold);
+  }
+  .about dd {
+    margin: 8px 0 0;
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .arches {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .arches figure,
+  .cats figure,
+  .contact figure {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 3 / 5;
+    border-radius: 999px 999px 0 0;
+    outline: 1px solid var(--line);
+    outline-offset: 8px;
+  }
+  .arches figure:last-child {
+    margin-top: 72px;
+  }
+  .arches :global(img),
+  .cats :global(img),
+  .contact figure :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Specials */
+  .head {
+    text-align: center;
+  }
+  .specials {
+    padding: clamp(72px, 9vw, 128px) var(--pad);
+    background: var(--panel);
+  }
+  .cats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(32px, 4vw, 64px);
+    margin-top: 40px;
+  }
+  .cats figure {
+    width: 72%;
+    margin: 0 auto;
+    aspect-ratio: 4 / 5;
+  }
+  h3 {
+    margin-top: 44px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+    font-size: 15px;
+    font-family: var(--sans);
+    font-weight: 500;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--gold);
+  }
+  .cats li {
+    padding-top: 24px;
+  }
+  .name {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font: 400 24px/1.2 var(--display);
+  }
+  .name i {
+    flex: 1;
+    min-width: 20px;
+    border-bottom: 1px dotted var(--line);
+    transform: translateY(-4px);
+  }
+  .price {
+    color: var(--gold);
+    white-space: nowrap;
+  }
+  .desc {
+    margin-top: 4px;
+    font-size: 16px;
+    color: var(--muted);
+  }
+
+  /* Lunch */
+  .lunch {
+    padding: clamp(72px, 9vw, 128px) var(--pad);
+  }
+  .frame {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: clamp(32px, 5vw, 72px);
+    border: 1px solid var(--line);
+    outline: 1px solid var(--line);
+    outline-offset: 8px;
+  }
+  .week > li {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 16px 32px;
+    padding: 26px 20px;
+    border-top: 1px solid var(--line);
+  }
+  .week > li[data-today] {
+    background: rgb(200 168 104 / 0.09);
+  }
+  .day {
+    font: 400 26px/1.2 var(--display);
+  }
+  .day span {
+    display: block;
+    margin-top: 4px;
+    font: 400 13px/1.4 var(--sans);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .day b {
+    display: none;
+    font-weight: 500;
+    color: var(--gold);
+  }
+  [data-today] .day b {
+    display: inline;
+  }
+  .week ol {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px 28px;
+  }
+  .week ol li {
+    font-size: 16px;
+    line-height: 1.45;
+  }
+  .week ol span {
+    display: block;
+    margin-bottom: 4px;
+    font: 400 13px/1 var(--display);
+    letter-spacing: 0.1em;
+    color: var(--gold);
+  }
+  .note {
+    padding-top: 28px;
+    border-top: 1px solid var(--line);
+    font-size: 15px;
+    text-align: center;
+    color: var(--muted);
+  }
+
+  /* Contact */
+  .contact {
+    display: grid;
+    grid-template-columns: minmax(0, 340px) minmax(0, 620px);
+    justify-content: center;
+    align-items: center;
+    gap: clamp(40px, 8vw, 128px);
+    padding: clamp(72px, 9vw, 128px) var(--pad);
+    background: var(--panel);
+  }
+  .phone {
+    display: inline-block;
+    margin-top: 28px;
+    font: 400 clamp(30px, 4.6vw, 60px) / 1.1 var(--display);
+    color: var(--gold);
+    text-decoration: none;
+  }
+  .phone:hover {
+    color: var(--cream);
+  }
+  .details {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 28px 32px;
+    margin: 44px 0 0;
+    padding-top: 32px;
+    border-top: 1px solid var(--line);
+  }
+  .details dt {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+  .details dd {
+    margin: 8px 0 0;
+    font-size: 17px;
+  }
+  .details a {
+    text-decoration-color: var(--line);
+    text-underline-offset: 5px;
+  }
+
+  footer {
+    padding: 40px var(--pad) 72px;
+    font-size: 14px;
+    text-align: center;
+    color: var(--muted);
+  }
+  footer p + p {
+    margin-top: 8px;
+  }
+
+  @media (max-width: 900px) {
+    header {
+      grid-template-columns: 1fr;
+      justify-items: center;
+      gap: 20px;
+    }
+    header .logo {
+      order: -1;
+    }
+    header nav:first-of-type {
+      display: none;
+    }
+    header nav {
+      gap: 24px;
+      font-size: 12px;
+    }
+    .about,
+    .contact {
+      grid-template-columns: 1fr;
+    }
+    .contact figure {
+      width: 60%;
+      max-width: 280px;
+      margin: 0 auto;
+    }
+    .contact > div {
+      text-align: center;
+    }
+    .cats {
+      grid-template-columns: 1fr;
+      max-width: 460px;
+      margin-inline: auto;
+    }
+    .week > li {
+      grid-template-columns: 1fr;
+      padding: 24px 8px;
+    }
+    .facts li {
+      width: 100%;
+    }
+    .facts li + li::before {
+      display: none;
+    }
+  }
+  @media (max-width: 560px) {
+    .week ol {
+      grid-template-columns: 1fr;
+    }
+    .details {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

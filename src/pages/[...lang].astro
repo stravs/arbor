@@ -1,0 +1,18 @@
+---
+import ProtoA from '../components/ProtoA.astro';
+import { langs, type Lang } from '../data/site';
+
+export function getStaticPaths() {
+  return langs.map((lang) => ({
+    params: { lang: lang === 'sl' ? undefined : lang },
+    props: { lang },
+  }));
+}
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+---
+
+<ProtoA lang={lang} />

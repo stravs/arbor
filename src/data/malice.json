@@ -1,0 +1,47 @@
+[
+  {
+    "day": 1,
+    "date": "2026-10-05",
+    "items": [
+      "Cordon bleu, pražen krompir, solata",
+      "Piščančja rižota, solata",
+      "Sataraš, slan krompir, solata"
+    ]
+  },
+  {
+    "day": 2,
+    "date": "2026-10-06",
+    "items": [
+      "Musaka, solata",
+      "Piščančji file iz mocarelo in paradižnikom, solata",
+      "Sirovi kaneloni, krompirjeva solata"
+    ]
+  },
+  {
+    "day": 3,
+    "date": "2026-10-07",
+    "items": [
+      "Mešano meso na žaru, džuveč riž, solata",
+      "Čufte, pire krompir, solata",
+      "Testenine pizzico, solata"
+    ]
+  },
+  {
+    "day": 4,
+    "date": "2026-10-08",
+    "items": [
+      "Svinjski zrezek po cigansko, kruhov cmok, solata",
+      "Makaronovo meso, solata",
+      "Gratinirana cvetača, solata"
+    ]
+  },
+  {
+    "day": 5,
+    "date": "2026-10-09",
+    "items": [
+      "Svinjska rolada, pečen krompir, solata",
+      "Piščančji file v smetanovi omaki, ocvrtki, solata",
+      "Pašta fižol, solata"
+    ]
+  }
+]
