@@ -35,7 +35,7 @@ const other: Lang = lang === 'sl' ? 'en' : 'sl';
     <main id="top">
       <section class="hero">
         <div class="hero-copy">
-          <div class="today-card" id="malice" data-lunch-today hidden>
+          <div class="today-card" data-lunch-today hidden>
             {
               malice.filter((d) => d.date && d.items.length).map((d) => (
                 <div class="panel" data-date-panel={d.date}>
@@ -135,6 +135,31 @@ const other: Lang = lang === 'sl' ? 'en' : 'sl';
                   <span class="price">{price(d.price)}</span>
                 </div>
                 <p>{d.desc[lang]}</p>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section class="lunch" id="malice">
+        <div class="head">
+          <div>
+            <p class="eyebrow">{s.lunchHours}</p>
+            <h2>{s.lunchWeek}</h2>
+          </div>
+          <p class="note">{s.lunchNote}</p>
+        </div>
+        <ul class="week">
+          {
+            malice.map((d) => (
+              <li data-day={d.day}>
+                <p class="day">
+                  {dayName(d.day, lang)} <span>{shortDate(d.date)}</span>
+                </p>
+                <p class="today">{s.today}</p>
+                <ol>
+                  {d.items.map((item) => <li>{item}</li>)}
+                </ol>
               </li>
             ))
           }
@@ -537,6 +562,82 @@ const other: Lang = lang === 'sl' ? 'en' : 'sl';
     color: var(--muted);
   }
 
+  /* Lunch */
+  .lunch {
+    padding: clamp(64px, 8vw, 112px) var(--pad);
+    background: var(--green);
+    color: var(--paper);
+  }
+  .lunch .eyebrow {
+    color: #d9bd83;
+  }
+  .note {
+    max-width: 26em;
+    font-size: 15px;
+    opacity: 0.75;
+  }
+  .week {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    margin-top: 56px;
+    border-top: 1px solid rgb(255 255 255 / 0.2);
+  }
+  .week > li {
+    position: relative;
+    padding: 28px 20px 8px;
+  }
+  .week > li + li {
+    border-left: 1px solid rgb(255 255 255 / 0.2);
+  }
+  .week > li:first-child {
+    padding-left: 0;
+  }
+  .day {
+    font: 380 26px/1.1 var(--serif);
+  }
+  .day span {
+    display: block;
+    margin-top: 6px;
+    font: 500 13px/1 var(--sans);
+    opacity: 0.6;
+  }
+  .today {
+    display: none;
+    position: absolute;
+    top: -12px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #d9bd83;
+    color: var(--green);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  [data-today] .today {
+    display: block;
+  }
+  .week ol {
+    margin-top: 24px;
+    counter-reset: n;
+  }
+  .week ol li {
+    counter-increment: n;
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    padding: 10px 0;
+    font-size: 15px;
+    line-height: 1.4;
+  }
+  .week ol li::before {
+    content: counter(n);
+    font: italic 380 15px/1.4 var(--serif);
+    color: #d9bd83;
+  }
+  .week ol li + li {
+    border-top: 1px solid rgb(255 255 255 / 0.1);
+  }
+
   /* Contact */
   .contact {
     padding: clamp(80px, 11vw, 160px) var(--pad) clamp(56px, 7vw, 96px);
@@ -639,6 +740,22 @@ const other: Lang = lang === 'sl' ? 'en' : 'sl';
     }
     .dishes {
       grid-template-columns: repeat(2, 1fr);
+    }
+    .week {
+      grid-template-columns: 1fr;
+      border-top: 0;
+    }
+    .week > li,
+    .week > li:first-child {
+      padding: 28px 0 12px;
+      border-top: 1px solid rgb(255 255 255 / 0.2);
+    }
+    .week > li + li {
+      border-left: 0;
+    }
+    .today {
+      top: 30px;
+      right: 0;
     }
   }
   @media (max-width: 560px) {
