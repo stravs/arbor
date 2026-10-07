@@ -3,10 +3,8 @@ import { t, type Lang } from '../data/site';
 
 interface Props {
   lang: Lang;
-  noindex?: boolean;
-  themeColor?: string;
 }
-const { lang, noindex, themeColor = '#0b4b24' } = Astro.props;
+const { lang } = Astro.props;
 ---
 
 <!doctype html>
@@ -16,9 +14,8 @@ const { lang, noindex, themeColor = '#0b4b24' } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{t[lang].title}</title>
     <meta name="description" content={t[lang].description} />
-    <meta name="theme-color" content={themeColor} />
+    <meta name="theme-color" content="#f6f1e7" />
     <link rel="icon" type="image/png" href="/favicon.png" />
-    {noindex && <meta name="robots" content="noindex" />}
   </head>
   <body>
     <slot />

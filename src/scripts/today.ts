@@ -7,12 +7,6 @@ document.querySelectorAll<HTMLElement>('[data-day]').forEach((el) => {
   el.toggleAttribute('data-today', Number(el.dataset.day) === day);
 });
 
-// Single-day panels: show today, or Monday on weekends.
-const panelDay = day >= 1 && day <= 5 ? day : 1;
-document.querySelectorAll<HTMLElement>('[data-day-panel]').forEach((el) => {
-  el.toggleAttribute('data-active', Number(el.dataset.dayPanel) === panelDay);
-});
-
 // Today's lunch bar: show only the panel dated today, and only from 6:00 until lunch ends at 14:00.
 const pad = (n: number) => String(n).padStart(2, '0');
 const iso = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
