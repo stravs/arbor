@@ -127,7 +127,7 @@ const numerals = ['I', 'II', 'III', 'IV', 'V'];
                         <p class="name">
                           <span>{d.name[lang]}</span>
                           <i aria-hidden="true" />
-                          <span class="price">{price(d.price)}</span>
+                          <span class="price">{price(d.price, lang)}</span>
                         </p>
                         <p class="desc">{d.desc[lang]}</p>
                       </li>
@@ -199,6 +199,10 @@ const numerals = ['I', 'II', 'III', 'IV', 'V'];
               <dt>E-mail</dt>
               <dd><a href={`mailto:${contact.email}`}>{contact.email}</a></dd>
             </div>
+            <div>
+              <dt>Instagram</dt>
+              <dd><a href={`https://www.instagram.com/${contact.instagram}/`} rel="noopener">@{contact.instagram}</a></dd>
+            </div>
           </dl>
         </div>
       </section>
@@ -206,7 +210,7 @@ const numerals = ['I', 'II', 'III', 'IV', 'V'];
 
     <footer>
       <p>{s.award}</p>
-      <p>© Arbor d.o.o. · <a href="#">{s.privacy}</a></p>
+      <p>© Arbor d.o.o.</p>
     </footer>
   </div>
 </Base>

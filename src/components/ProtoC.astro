@@ -122,7 +122,7 @@ const other: Lang = lang === 'sl' ? 'en' : 'sl';
               <li class="tile">
                 <figure>
                   <Image src={d.image} alt={d.name[lang]} widths={[400, 640, 900]} sizes="(min-width: 900px) 31vw, 78vw" />
-                  <span class="chip">{price(d.price)}</span>
+                  <span class="chip">{price(d.price, lang)}</span>
                 </figure>
                 <h3>{d.name[lang]}</h3>
                 <p>{d.desc[lang]}</p>
@@ -168,13 +168,16 @@ const other: Lang = lang === 'sl' ? 'en' : 'sl';
             <span>E-mail</span>
             <a href={`mailto:${contact.email}`}>{contact.email}</a>
           </li>
+          <li>
+            <span>Instagram</span>
+            <a href={`https://www.instagram.com/${contact.instagram}/`} rel="noopener">@{contact.instagram}</a>
+          </li>
         </ul>
       </section>
     </main>
 
     <footer>
       <span>© Arbor d.o.o.</span>
-      <a href="#">{s.privacy}</a>
     </footer>
 
     <div class="dock">

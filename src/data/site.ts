@@ -25,6 +25,7 @@ export const contact = {
   phone: '+386 (0)4 57 43 033',
   tel: '+38645743033',
   email: 'info@arborbled.si',
+  instagram: 'restavracijaarbor',
   street: 'Ljubljanska cesta 4',
   city: '4260 Bled',
   maps: 'https://www.google.com/maps/search/?api=1&query=Restavracija+Arbor+Bled%2C+Ljubljanska+cesta+4',
@@ -52,7 +53,7 @@ export const specials: Special[] = [
   {
     id: 'golaz',
     category: 'slo',
-    price: 14,
+    price: 22,
     image: golaz,
     name: { sl: 'Jelenov golaž', en: 'Venison goulash' },
     desc: { sl: 'Jelenov golaž z ocvrtki', en: 'Venison goulash with croquettes' },
@@ -60,7 +61,7 @@ export const specials: Special[] = [
   {
     id: 'klobasa',
     category: 'slo',
-    price: 12,
+    price: 19,
     image: klobasa,
     name: { sl: 'Kranjska klobasa', en: 'Carniolan sausage' },
     desc: { sl: 'Kranjska klobasa, česnov kruh, gorčica', en: 'Carniolan sausage, garlic bread and mustard' },
@@ -68,7 +69,7 @@ export const specials: Special[] = [
   {
     id: 'ravioli',
     category: 'med',
-    price: 12,
+    price: 19,
     image: ravioli,
     name: { sl: 'Ravioli', en: 'Ravioli' },
     desc: { sl: 'Domači ravioli s sirom in špinačo', en: 'Homemade ravioli with cheese and spinach' },
@@ -76,7 +77,7 @@ export const specials: Special[] = [
   {
     id: 'solata',
     category: 'med',
-    price: 12,
+    price: 17,
     image: solata,
     name: { sl: 'Solatni krožniki', en: 'Salad plates' },
     desc: { sl: 'Solatni krožniki s svežo sezonsko zelenjavo', en: 'Salad plates with fresh seasonal vegetables' },
@@ -84,7 +85,7 @@ export const specials: Special[] = [
   {
     id: 'sufle',
     category: 'sweet',
-    price: 7,
+    price: 9,
     image: sufle,
     name: { sl: 'Čokoladni sufle', en: 'Chocolate soufflé' },
     desc: { sl: 'Čokoladni sufle, sladoled', en: 'Chocolate soufflé and ice cream' },
@@ -92,7 +93,7 @@ export const specials: Special[] = [
   {
     id: 'struklji',
     category: 'sweet',
-    price: 7,
+    price: 9.5,
     image: struklji,
     name: { sl: 'Sladki skutni štruklji', en: 'Sweet ricotta dumplings' },
     desc: { sl: 'Skutni štruklji s sladkim prelivom', en: 'Homemade dumplings with sweet sauce' },
@@ -126,14 +127,16 @@ export const shortDate = (iso: string | null) => {
   return `${d}. ${m}.`;
 };
 
-export const price = (n: number) => `${n} €`;
+// 19 → "19 €", 17.5 → "17,50 €" (sl) / "17.50 €" (en)
+export const price = (n: number, lang: Lang) =>
+  `${Number.isInteger(n) ? n : n.toFixed(2).replace('.', lang === 'sl' ? ',' : '.')} €`;
 
 export const t = {
   sl: {
     title: 'Restavracija Arbor Bled – sveža in lokalno pridelana hrana',
     description:
       'Restavracija Arbor v samem centru Bleda: italijanska, mediteranska in domača kuhinja, dnevne malice ter pogled na jezero, otok in grad.',
-    nav: { about: 'Arbor', specials: 'Specialitete', lunch: 'Malice', contact: 'Kontakt' },
+    nav: { about: 'Arbor', specials: 'Specialitete', menu: 'Meni', lunch: 'Malice', contact: 'Kontakt' },
     eyebrow: 'Restavracija · Bled',
     tagline: 'Nič ne zbuja spominov bolje kot okus.',
     heroSub:
@@ -153,6 +156,9 @@ export const t = {
     specialsTitle: 'Hišne specialitete',
     specialsSub: 'Radost za vaša čutila.',
     menuCta: 'Oglejte si celoten meni',
+    menuTitle: 'Meni',
+    allergensTitle: 'Alergeni',
+    allergensNote: 'Prisotnost zakonsko reguliranih alergenov v naših jedeh označujemo s spodnjimi oznakami.',
     lunchTitle: 'Malice',
     lunchNote: 'Malice strežemo od ponedeljka do petka, od 11.00 do 14.00 ure.',
     lunchHours: 'Pon–pet · 11.00–14.00',
@@ -170,14 +176,13 @@ export const t = {
     call: 'Pokliči',
     directions: 'Pot do nas',
     award: 'Restaurant Guru 2024 – med 100 najboljšimi italijanskimi restavracijami v Sloveniji',
-    privacy: 'Politika zasebnosti',
     otherLang: 'English',
   },
   en: {
     title: 'Restaurant Arbor Bled – fresh, locally sourced food',
     description:
       'Restaurant Arbor in the heart of Bled: Italian, Mediterranean and Slovenian cuisine, daily lunch menus and a view of the lake, the island and the castle.',
-    nav: { about: 'Arbor', specials: 'Specials', lunch: 'Lunch', contact: 'Contact' },
+    nav: { about: 'Arbor', specials: 'Specials', menu: 'Menu', lunch: 'Lunch', contact: 'Contact' },
     eyebrow: 'Restaurant · Bled',
     tagline: 'Nothing arouses memories better than taste.',
     heroSub:
@@ -197,6 +202,9 @@ export const t = {
     specialsTitle: 'House specials',
     specialsSub: 'An absolute delight for your senses.',
     menuCta: 'See the full menu',
+    menuTitle: 'Menu',
+    allergensTitle: 'Allergens',
+    allergensNote: 'Legally regulated allergens in our dishes are marked with the codes below.',
     lunchTitle: 'Daily lunch',
     lunchNote: 'Lunch menus are served Monday to Friday, 11:00 to 14:00. Dishes are listed in Slovenian.',
     lunchHours: 'Mon–Fri · 11:00–14:00',
@@ -214,7 +222,6 @@ export const t = {
     call: 'Call',
     directions: 'Directions',
     award: 'Restaurant Guru 2024 – a top 100 Italian restaurant in Slovenia',
-    privacy: 'Privacy policy',
     otherLang: 'Slovensko',
   },
 } as const;
