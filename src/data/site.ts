@@ -1,6 +1,6 @@
 import type { ImageMetadata } from 'astro';
 import type { Lang } from '../i18n';
-import maliceJson from './malice.json';
+import { dayNames } from '../lib/content';
 
 import arbor1 from '../assets/photos/arbor1.jpg';
 import arbor2 from '../assets/photos/arbor2.jpg';
@@ -28,10 +28,6 @@ export const contact = {
   city: '4260 Bled',
   maps: 'https://www.google.com/maps/search/?api=1&query=Restavracija+Arbor+Bled%2C+Ljubljanska+cesta+4',
   menuPdf: '/meni.pdf',
-  // Opening hours in minutes from midnight, Europe/Ljubljana. 0 = Sunday.
-  opens: 10 * 60,
-  closes: 22 * 60,
-  closedDays: [0],
   seatsInside: 52,
   seatsTerrace: 55,
 };
@@ -149,28 +145,7 @@ export const specials: Special[] = [
   },
 ];
 
-export interface LunchDay {
-  day: number;
-  date: string | null;
-  items: string[];
-}
-
-export const malice = maliceJson as LunchDay[];
-
-const dayNames: Record<Lang, string[]> = {
-  sl: ['Nedelja', 'Ponedeljek', 'Torek', 'Sreda', 'Četrtek', 'Petek', 'Sobota'],
-  en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-  it: ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'],
-  de: ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'],
-};
-
 export const dayName = (day: number, lang: Lang) => dayNames[lang][day];
-
-export const shortDate = (iso: string | null) => {
-  if (!iso) return '';
-  const [, m, d] = iso.split('-').map(Number);
-  return `${d}. ${m}.`;
-};
 
 // 19 → "19 €", 17.5 → "17.50 €" (en) / "17,50 €" (others)
 export const price = (n: number, lang: Lang) =>

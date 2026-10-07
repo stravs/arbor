@@ -30,8 +30,6 @@ const en: Dictionary = {
   contactTitle: 'We would love to welcome you soon!',
   contactSub: 'Call us for table reservations',
   hoursLabel: 'Opening hours',
-  hours: 'Mon–Sat · 10:00–22:00',
-  sunday: 'Closed on Sunday',
   addressLabel: 'Address',
   openNow: 'Open now',
   closedNow: 'Closed right now',

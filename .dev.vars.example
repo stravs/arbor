@@ -1,0 +1,2 @@
+# Local development only: lets `wrangler dev` open /admin without Cloudflare Access.
+DEV_NO_AUTH=1

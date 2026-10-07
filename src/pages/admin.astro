@@ -1,0 +1,429 @@
+---
+// Editor for malice and opening hours. Sits behind Cloudflare Access and saves
+// through the Worker (worker/index.ts), so it only works in `npm run preview` or deployed.
+import '@fontsource-variable/fraunces';
+import '@fontsource-variable/instrument-sans';
+import { dayNames } from '../lib/content';
+
+const names = dayNames.sl;
+// The week on show and the one after it; the tabs get their dates in the browser.
+const weeks = [0, 1];
+---
+
+<!doctype html>
+<html lang="sl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Arbor – urejanje</title>
+    <link rel="icon" type="image/png" href="/favicon.png" />
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">Restavracija Arbor</p>
+      <h1>Urejanje strani</h1>
+      <p id="status" role="status">Nalagam …</p>
+
+      <form id="form" hidden>
+        <section>
+          <h2>Malice</h2>
+          <p class="hint">
+            Med pisanjem se ponudijo jedi iz prejšnjih tednov. Dan brez jedi se na strani ne prikaže.
+          </p>
+          <div class="tabs">
+            {
+              weeks.map((w) => <button type="button" data-week={w} aria-pressed={w === 0 ? 'true' : 'false'} />)
+            }
+          </div>
+          {
+            weeks.map((w) => (
+              <div class="days" data-week-panel={w} hidden={w > 0}>
+                {[1, 2, 3, 4, 5].map((day) => (
+                  <fieldset>
+                    <legend>
+                      {names[day]} <small data-date-label />
+                    </legend>
+                    <div class="dishes" data-malice />
+                  </fieldset>
+                ))}
+              </div>
+            ))
+          }
+          <template id="dish">
+            <input type="text" list="dishes" maxlength="200" autocomplete="off" aria-label="Jed" />
+          </template>
+          <datalist id="dishes"></datalist>
+        </section>
+
+        <section>
+          <h2>Odpiralni čas</h2>
+          <div class="hours">
+            {
+              [1, 2, 3, 4, 5, 6, 0].map((day) => (
+                <div class="row" data-weekday={day}>
+                  <label>
+                    <input type="checkbox" data-open /> {names[day]}
+                  </label>
+                  <span class="times">
+                    <input type="time" data-from aria-label="Odpremo ob" required /> –
+                    <input type="time" data-to aria-label="Zapremo ob" required />
+                  </span>
+                </div>
+              ))
+            }
+          </div>
+
+          <h3>Izjeme</h3>
+          <p class="hint">Prazniki, dopust ali drugačen delovni čas na določene dni.</p>
+          <div id="exceptions"></div>
+          <template id="exception">
+            <div class="row exception">
+              <span class="dates">
+                <input type="date" data-date-from aria-label="Od" required /> –
+                <input type="date" data-date-to aria-label="Do" />
+              </span>
+              <label>
+                <input type="checkbox" data-open /> Odprto
+              </label>
+              <span class="times">
+                <input type="time" data-from aria-label="Odpremo ob" required /> –
+                <input type="time" data-to aria-label="Zapremo ob" required />
+              </span>
+              <button type="button" class="remove" data-remove>Odstrani</button>
+            </div>
+          </template>
+          <button type="button" class="outline" id="add">Dodaj izjemo</button>
+        </section>
+
+        <div class="bar">
+          <button type="submit">Shrani</button>
+          <span id="saved" role="status"></span>
+        </div>
+      </form>
+    </main>
+  </body>
+</html>
+
+<script>
+  import { addDays, lunchWeek, shortDate, type Content, type Span } from '../lib/content';
+
+  const API = '/admin/api/content';
+  const $ = <T extends HTMLElement>(sel: string, root: ParentNode = document) => root.querySelector<T>(sel)!;
+  const $$ = <T extends HTMLElement>(sel: string, root: ParentNode = document) => [...root.querySelectorAll<T>(sel)];
+
+  const form = $<HTMLFormElement>('#form');
+  const status = $('#status');
+  const saved = $('#saved');
+  const exceptions = $('#exceptions');
+  const template = $<HTMLTemplateElement>('#exception');
+  const dishTemplate = $<HTMLTemplateElement>('#dish');
+
+  type Loaded = Content & { today: string; dishes: string[] };
+
+  const addDish = (box: HTMLElement, dish = '') => {
+    const input = (dishTemplate.content.cloneNode(true) as DocumentFragment).firstElementChild as HTMLInputElement;
+    input.value = dish;
+    box.append(input);
+  };
+
+  // 600 ↔ "10:00"
+  const toClock = (mins: number) => `${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`;
+  const toMins = (clock: string) => Number(clock.slice(0, 2)) * 60 + Number(clock.slice(3, 5));
+
+  // A row with an "open" checkbox and two time fields: a weekday or an exception.
+  const setSpan = (row: ParentNode, span: Span | null) => {
+    const open = $<HTMLInputElement>('[data-open]', row);
+    open.checked = !!span;
+    $<HTMLInputElement>('[data-from]', row).value = toClock(span?.[0] ?? 10 * 60);
+    $<HTMLInputElement>('[data-to]', row).value = toClock(span?.[1] ?? 22 * 60);
+    syncRow(row);
+  };
+  const getSpan = (row: ParentNode): Span | null =>
+    $<HTMLInputElement>('[data-open]', row).checked
+      ? [toMins($<HTMLInputElement>('[data-from]', row).value), toMins($<HTMLInputElement>('[data-to]', row).value)]
+      : null;
+  const syncRow = (row: ParentNode) => {
+    const open = $<HTMLInputElement>('[data-open]', row).checked;
+    $$<HTMLInputElement>('[data-from], [data-to]', row).forEach((input) => (input.disabled = !open));
+  };
+
+  const addException = (e?: Content['hours']['exceptions'][number]) => {
+    const row = (template.content.cloneNode(true) as DocumentFragment).firstElementChild as HTMLElement;
+    $<HTMLInputElement>('[data-date-from]', row).value = e?.from ?? '';
+    $<HTMLInputElement>('[data-date-to]', row).value = e && e.to !== e.from ? e.to : '';
+    setSpan(row, e?.hours ?? null);
+    exceptions.append(row);
+  };
+
+  const show = (data: Loaded) => {
+    // From Saturday on the first tab is already the coming week, matching the public page.
+    const first = lunchWeek(data.today);
+    const dates = [...first, ...lunchWeek(addDays(first[0], 7))];
+    $$('[data-week]').forEach((tab, w) => (tab.textContent = `${shortDate(dates[w * 5])}–${shortDate(dates[w * 5 + 4])}`));
+    $$('[data-malice]').forEach((box, i) => {
+      box.dataset.date = dates[i];
+      box.replaceChildren();
+      // Always leave an empty field to type the next dish into.
+      [...(data.malice[dates[i]] ?? []), ''].forEach((dish) => addDish(box, dish));
+      while (box.children.length < 3) addDish(box);
+    });
+    $('#dishes').replaceChildren(...data.dishes.map((dish) => new Option(dish, dish)));
+    $$('[data-date-label]').forEach((el, i) => (el.textContent = shortDate(dates[i])));
+    $$('[data-weekday]').forEach((row) => setSpan(row, data.hours.week[Number(row.dataset.weekday)]));
+    exceptions.replaceChildren();
+    data.hours.exceptions.forEach(addException);
+  };
+
+  const collect = (): Content => {
+    const week: (Span | null)[] = [];
+    $$('[data-weekday]').forEach((row) => (week[Number(row.dataset.weekday)] = getSpan(row)));
+    return {
+      malice: Object.fromEntries(
+        $$('[data-malice]').map((box) => [box.dataset.date!, $$<HTMLInputElement>('input', box).map((i) => i.value)]),
+      ),
+      hours: {
+        week,
+        exceptions: $$('.exception').map((row) => {
+          const from = $<HTMLInputElement>('[data-date-from]', row).value;
+          return { from, to: $<HTMLInputElement>('[data-date-to]', row).value || from, hours: getSpan(row) };
+        }),
+      },
+    };
+  };
+
+  // An expired Access session answers with a redirect to the login page instead of JSON.
+  const request = async (init?: RequestInit) => {
+    const res = await fetch(API, init).catch(() => null);
+    if (res?.status === 400) throw new Error('Preverite vnos: ure zapiranja morajo biti po urah odpiranja, datumi izjem pa veljavni.');
+    if (!res?.ok || !res.headers.get('content-type')?.includes('json'))
+      throw new Error('Povezava ni uspela. Osvežite stran in se po potrebi znova prijavite.');
+    return (await res.json()) as Loaded;
+  };
+
+  form.addEventListener('change', (e) => {
+    const row = (e.target as HTMLElement).closest('.row');
+    if (row) syncRow(row);
+  });
+  form.addEventListener('input', (e) => {
+    saved.textContent = '';
+    const input = e.target as HTMLInputElement;
+    const box = input.closest<HTMLElement>('[data-malice]');
+    if (box && input === box.lastElementChild && input.value) addDish(box);
+  });
+  form.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    target.closest('[data-remove]')?.closest('.row')?.remove();
+    const tab = target.closest<HTMLElement>('[data-week]');
+    if (tab) {
+      $$('[data-week]').forEach((b) => b.setAttribute('aria-pressed', String(b === tab)));
+      $$('[data-week-panel]').forEach((p) => (p.hidden = p.dataset.weekPanel !== tab.dataset.week));
+    }
+  });
+  $('#add').addEventListener('click', () => addException());
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const button = $<HTMLButtonElement>('[type=submit]', form);
+    button.disabled = true;
+    saved.textContent = 'Shranjujem …';
+    try {
+      show(await request({ method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(collect()) }));
+      saved.textContent = 'Shranjeno. Na strani bo vidno v približno minuti.';
+    } catch (err) {
+      saved.textContent = (err as Error).message;
+    }
+    button.disabled = false;
+  });
+
+  try {
+    show(await request());
+    status.hidden = true;
+    form.hidden = false;
+  } catch (err) {
+    status.textContent = (err as Error).message;
+  }
+</script>
+
+<style>
+  :global(body) {
+    margin: 0;
+    background: #f6f1e7;
+    color: #1c241e;
+    font: 16px/1.5 'Instrument Sans Variable', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  :global(*) {
+    box-sizing: border-box;
+  }
+  [hidden] {
+    display: none !important;
+  }
+  main {
+    --green: #0b4b24;
+    --gold: #a8833f;
+    --muted: #5d665e;
+    --line: #d8cfbb;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 32px 20px 120px;
+  }
+  .eyebrow {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+  h1,
+  h2,
+  h3 {
+    margin: 0;
+    font-family: 'Fraunces Variable', Georgia, serif;
+    font-weight: 380;
+    letter-spacing: -0.02em;
+  }
+  h1 {
+    margin-top: 6px;
+    font-size: 40px;
+    line-height: 1.05;
+  }
+  h2 {
+    font-size: 28px;
+  }
+  h3 {
+    margin-top: 32px;
+    font-size: 21px;
+  }
+  section {
+    margin-top: 40px;
+    padding-top: 28px;
+    border-top: 1px solid var(--line);
+  }
+  .hint,
+  #status {
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: 15px;
+  }
+  #status {
+    margin-top: 24px;
+  }
+  input,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+  input[type='time'],
+  input[type='date'],
+  input[type='text'] {
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fffdf8;
+  }
+  input:disabled {
+    opacity: 0.4;
+  }
+  input[type='checkbox'] {
+    width: 18px;
+    height: 18px;
+    margin: 0 8px 0 0;
+    accent-color: var(--green);
+    vertical-align: -3px;
+  }
+  button {
+    padding: 11px 22px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--green);
+    color: #f6f1e7;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  button:disabled {
+    opacity: 0.6;
+  }
+  button.outline,
+  .tabs button[aria-pressed='false'] {
+    background: none;
+    box-shadow: inset 0 0 0 1.5px var(--green);
+    color: var(--green);
+  }
+  button.remove {
+    padding: 6px 0;
+    background: none;
+    color: var(--muted);
+    font-weight: 500;
+    text-decoration: underline;
+  }
+  .tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+  }
+  .days {
+    display: grid;
+    gap: 18px;
+    margin-top: 20px;
+  }
+  fieldset {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  legend {
+    margin-bottom: 6px;
+    padding: 0;
+    font-weight: 600;
+  }
+  .dishes {
+    display: grid;
+    gap: 8px;
+  }
+  .days small {
+    margin-left: 4px;
+    font-weight: 400;
+    color: var(--muted);
+  }
+  input[type='text'] {
+    width: 100%;
+  }
+  .hours {
+    margin-top: 16px;
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 20px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .times,
+  .dates {
+    white-space: nowrap;
+  }
+  #add {
+    margin-top: 16px;
+  }
+  .bar {
+    position: fixed;
+    inset: auto 0 0;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--line);
+    background: #f6f1e7;
+  }
+  #saved {
+    font-size: 14px;
+    color: var(--muted);
+  }
+</style>

@@ -1,6 +1,6 @@
 ---
-import { contact } from '../data/site';
 import { t, type Lang } from '../i18n';
+import { defaultHours, weekLines } from '../lib/content';
 
 interface Props {
   lang: Lang;
@@ -12,9 +12,7 @@ const { lang, class: className } = Astro.props;
 <span
   class={className}
   data-open-status
-  data-opens={contact.opens}
-  data-closes={contact.closes}
-  data-closed-days={contact.closedDays.join(',')}
+  data-hours={JSON.stringify(defaultHours)}
   data-open-text={t[lang].openNow}
   data-closed-text={t[lang].closedNow}
->{t[lang].hours}</span>
+>{weekLines(defaultHours, lang, true)[0]}</span>

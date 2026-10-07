@@ -4,8 +4,10 @@ import { Image, Picture } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import OpenStatus from '../components/OpenStatus.astro';
 import { allergens, menu } from '../data/menu';
-import { contact, dayName, images, malice, price, shortDate, specials } from '../data/site';
+import { contact, dayName, images, price, specials } from '../data/site';
+import devMalice from '../data/malice.dev.json';
 import { defaultLang, langNames, langPath, langs, t, type Lang } from '../i18n';
+import { defaultHours, exceptionLines, localNow, lunchWeek, shortDate, weekLines } from '../lib/content';
 
 export function getStaticPaths() {
   return langs.map((lang) => ({
@@ -22,6 +24,18 @@ const s = t[lang];
 // Daily lunches are only published in Slovenian.
 const sl = lang === 'sl';
 const formats: ImageOutputFormat[] = ['avif', 'webp'];
+
+// Malice and opening hours are filled in at the edge from KV (worker/index.ts), so the
+// markup below only carries the hooks: data-lunch, data-day, data-lunch-date,
+// data-lunch-items and data-hours-lines. Without stored malice the lunch parts stay hidden.
+// `astro dev` runs without the Worker and shows sample dishes for the current week instead.
+const today = localNow().date;
+const week = lunchWeek(today);
+const sample: string[][] = import.meta.env.DEV ? devMalice : [];
+const lunchDays = [1, 2, 3, 4, 5].map((day, i) => ({ day, date: sample[i] ? week[i] : undefined, items: sample[i] ?? [] }));
+const noLunch = !sample.length;
+const openHours = weekLines(defaultHours, lang, true);
+const allHours = [...weekLines(defaultHours, lang), ...exceptionLines(defaultHours, lang, today)];
 ---
 
 <Base lang={lang}>
@@ -34,7 +48,7 @@ const formats: ImageOutputFormat[] = ['avif', 'webp'];
         <a href="#arbor" translate="no">{s.nav.about}</a>
         <a href="#specialitete">{s.nav.specials}</a>
         <a href="#meni">{s.nav.menu}</a>
-        {sl && <a href="#malice">{s.nav.lunch}</a>}
+        {sl && <a href="#malice" data-lunch hidden={noLunch}>{s.nav.lunch}</a>}
         <a href="#kontakt">{s.nav.contact}</a>
       </nav>
       <div class="top-end">
@@ -60,12 +74,12 @@ const formats: ImageOutputFormat[] = ['avif', 'webp'];
             sl && (
               <div class="today-card" data-lunch-today hidden>
                 {
-                  malice.filter((d) => d.date && d.items.length).map((d) => (
-                    <div class="panel" data-date-panel={d.date}>
+                  lunchDays.map((d) => (
+                    <div class="panel" data-day={d.day} data-date-panel={d.date}>
                       <p class="eyebrow">
-                        {s.lunchToday} · <span>{dayName(d.day, lang)} {shortDate(d.date)}</span>
+                        {s.lunchToday} · <span>{dayName(d.day, lang)} <span data-lunch-date={d.day}>{shortDate(d.date ?? null)}</span></span>
                       </p>
-                      <ol>
+                      <ol data-lunch-items={d.day}>
                         {d.items.map((item) => <li>{item}</li>)}
                       </ol>
                     </div>
@@ -102,7 +116,7 @@ const formats: ImageOutputFormat[] = ['avif', 'webp'];
       <ul class="strip">
         <li>
           <span>{s.hoursLabel}</span>
-          <strong>{s.hours}</strong>
+          <strong data-hours-lines="open" set:html={openHours.join('<br />')} />
           <OpenStatus lang={lang} class="status" />
         </li>
         <li>
@@ -214,7 +228,7 @@ const formats: ImageOutputFormat[] = ['avif', 'webp'];
 
       {
         sl && (
-        <section class="lunch" id="malice">
+        <section class="lunch" id="malice" data-lunch hidden={noLunch}>
           <div class="head">
             <div>
               <p class="eyebrow">{s.lunchHours}</p>
@@ -223,13 +237,13 @@ const formats: ImageOutputFormat[] = ['avif', 'webp'];
           </div>
           <ul class="week">
             {
-              malice.map((d) => (
+              lunchDays.map((d) => (
                 <li data-day={d.day}>
                   <p class="day">
-                    {dayName(d.day, lang)} <span>{shortDate(d.date)}</span>
+                    {dayName(d.day, lang)} <span data-lunch-date={d.day}>{shortDate(d.date ?? null)}</span>
                   </p>
                   <p class="today">{s.today}</p>
-                  <ol>
+                  <ol data-lunch-items={d.day}>
                     {d.items.map((item) => <li>{item}</li>)}
                   </ol>
                 </li>
@@ -252,7 +266,7 @@ const formats: ImageOutputFormat[] = ['avif', 'webp'];
           </li>
           <li>
             <span>{s.hoursLabel}</span>
-            {s.hours}<br />{s.sunday}
+            <div data-hours-lines="all" set:html={allHours.join('<br />')} />
           </li>
           <li>
             <span>E-mail</span>

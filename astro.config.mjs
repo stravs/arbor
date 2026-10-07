@@ -50,6 +50,7 @@ export default defineConfig({
   ],
   integrations: [
     sitemap({
+      filter: (page) => !page.includes('/admin'),
       i18n: {
         defaultLocale: 'sl',
         locales: Object.fromEntries(locales.map((l) => [l, l])),

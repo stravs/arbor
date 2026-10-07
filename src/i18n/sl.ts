@@ -29,8 +29,6 @@ const sl = {
   contactTitle: 'Z veseljem vas pričakujemo!',
   contactSub: 'Pokličite nas za rezervacijo mize',
   hoursLabel: 'Odpiralni čas',
-  hours: 'Pon–sob · 10.00–22.00',
-  sunday: 'Nedelja zaprto',
   addressLabel: 'Naslov',
   openNow: 'Odprto zdaj',
   closedNow: 'Trenutno zaprto',
