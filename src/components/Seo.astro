@@ -1,0 +1,91 @@
+---
+import { getImage } from 'astro:assets';
+import { allergens, menu } from '../data/menu';
+import { contact, images } from '../data/site';
+import { defaultLang, langUrl, langs, ogLocales, t, type Lang } from '../i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const s = t[lang];
+const url = langUrl(lang);
+
+const share = await getImage({ src: images.arbor1, width: 1200, height: 630, fit: 'cover', format: 'jpg', layout: 'none' });
+const shareUrl = new URL(share.src, Astro.site).href;
+
+const hhmm = (mins: number) => `${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`;
+const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+// Vegetarian is a diet, not an allergen; everything else in a dish's tags is left to the visible legend.
+const vegetarian: keyof typeof allergens = 'V';
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'Restaurant',
+  '@id': `${langUrl(defaultLang)}#restaurant`,
+  name: contact.name,
+  description: s.description,
+  url,
+  image: shareUrl,
+  logo: new URL('/favicon.png', Astro.site).href,
+  telephone: contact.tel,
+  email: contact.email,
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: contact.street,
+    postalCode: contact.postalCode,
+    addressLocality: contact.locality,
+    addressCountry: 'SI',
+  },
+  hasMap: contact.maps,
+  sameAs: [`https://www.instagram.com/${contact.instagram}/`],
+  servesCuisine: s.cuisine,
+  acceptsReservations: true,
+  currenciesAccepted: 'EUR',
+  award: s.award,
+  openingHoursSpecification: {
+    '@type': 'OpeningHoursSpecification',
+    dayOfWeek: weekdays.filter((_, day) => !contact.closedDays.includes(day)),
+    opens: hhmm(contact.opens),
+    closes: hhmm(contact.closes),
+  },
+  hasMenu: {
+    '@type': 'Menu',
+    url: `${url}#meni`,
+    inLanguage: lang,
+    hasMenuSection: menu.map((section) => ({
+      '@type': 'MenuSection',
+      name: section.title[lang],
+      hasMenuItem: section.items.map((item) => ({
+        '@type': 'MenuItem',
+        name: item.name[lang],
+        description: item.desc?.[lang],
+        suitableForDiet: item.tags?.includes(vegetarian) ? 'https://schema.org/VegetarianDiet' : undefined,
+        offers: { '@type': 'Offer', price: item.price.toFixed(2), priceCurrency: 'EUR' },
+      })),
+    })),
+  },
+};
+---
+
+<title>{s.title}</title>
+<meta name="description" content={s.description} />
+<link rel="canonical" href={url} />
+{langs.map((l) => <link rel="alternate" hreflang={l} href={langUrl(l)} />)}
+<link rel="alternate" hreflang="x-default" href={langUrl(defaultLang)} />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content={contact.name} />
+<meta property="og:title" content={s.title} />
+<meta property="og:description" content={s.description} />
+<meta property="og:url" content={url} />
+<meta property="og:locale" content={ogLocales[lang]} />
+{langs.filter((l) => l !== lang).map((l) => <meta property="og:locale:alternate" content={ogLocales[l]} />)}
+<meta property="og:image" content={shareUrl} />
+<meta property="og:image:width" content={String(share.attributes.width)} />
+<meta property="og:image:height" content={String(share.attributes.height)} />
+<meta property="og:image:alt" content={s.roomAlt} />
+<meta name="twitter:card" content="summary_large_image" />
+
+<script type="application/ld+json" is:inline set:html={JSON.stringify(schema).replaceAll('<', '\\u003c')} />

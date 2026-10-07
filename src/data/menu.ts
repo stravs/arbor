@@ -1,4 +1,4 @@
-import type { Lang } from './site';
+import type { Lang } from '../i18n';
 
 // Transcribed from public/meni.pdf. Keep in sync when the PDF changes.
 

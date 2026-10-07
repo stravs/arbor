@@ -1,16 +1,15 @@
 ---
-import { Image } from 'astro:assets';
-import '@fontsource-variable/fraunces';
-import '@fontsource-variable/fraunces/wght-italic.css';
-import '@fontsource-variable/instrument-sans';
+import type { ImageOutputFormat } from 'astro';
+import { Image, Picture } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import OpenStatus from '../components/OpenStatus.astro';
 import { allergens, menu } from '../data/menu';
-import { contact, dayName, images, langNames, langPath, langs, malice, price, shortDate, specials, t, type Lang } from '../data/site';
+import { contact, dayName, images, malice, price, shortDate, specials } from '../data/site';
+import { defaultLang, langNames, langPath, langs, t, type Lang } from '../i18n';
 
 export function getStaticPaths() {
   return langs.map((lang) => ({
-    params: { lang: lang === 'sl' ? undefined : lang },
+    params: { lang: lang === defaultLang ? undefined : lang },
     props: { lang },
   }));
 }
@@ -20,16 +19,18 @@ interface Props {
 }
 const { lang } = Astro.props;
 const s = t[lang];
+// Daily lunches are only published in Slovenian.
 const sl = lang === 'sl';
+const formats: ImageOutputFormat[] = ['avif', 'webp'];
 ---
 
 <Base lang={lang}>
   <div class="page">
     <header class="top">
       <a href="#top" class="logo" aria-label={contact.name}>
-        <Image src={images.logo} alt="Arbor" width={240} loading="eager" />
+        <Image src={images.logo} alt="Arbor" width={108} loading="eager" />
       </a>
-      <nav id="nav" aria-label="Main">
+      <nav id="nav" aria-label={s.navLabel}>
         <a href="#arbor" translate="no">{s.nav.about}</a>
         <a href="#specialitete">{s.nav.specials}</a>
         <a href="#meni">{s.nav.menu}</a>
@@ -83,17 +84,17 @@ const sl = lang === 'sl';
         </div>
         <div class="hero-art">
           <figure class="arch">
-            <Image
+            <Picture
               src={images.arbor2}
-              alt=""
-              widths={[480, 800, 1200]}
-              sizes="(min-width: 900px) 42vw, 90vw"
-              loading="eager"
-              fetchpriority="high"
+              alt={s.heroAlt}
+              formats={formats}
+              width={520}
+              sizes="(min-width: 900px) min(520px, 40vw), min(420px, 90vw)"
+              priority
             />
           </figure>
           <div class="badge">
-            <Image src={images.eatLocal} alt="Eat local, eat fresh" width={160} />
+            <Image src={images.eatLocal} alt="Eat local, eat fresh" width={104} />
           </div>
         </div>
       </section>
@@ -113,10 +114,10 @@ const sl = lang === 'sl';
       <section class="about" id="arbor">
         <div class="about-art">
           <figure class="tall">
-            <Image src={images.arbor3} alt="" widths={[400, 700, 1000]} sizes="(min-width: 900px) 32vw, 70vw" />
+            <Picture src={images.arbor3} alt={s.castleAlt} formats={formats} widths={[400, 700, 1000]} sizes="(min-width: 900px) 32vw, 70vw" />
           </figure>
           <figure class="small">
-            <Image src={images.arbor1} alt="" widths={[320, 560, 800]} sizes="(min-width: 900px) 24vw, 50vw" />
+            <Picture src={images.arbor1} alt={s.roomAlt} formats={formats} widths={[320, 560, 800]} sizes="(min-width: 900px) 24vw, 50vw" />
           </figure>
         </div>
         <div class="about-copy">
@@ -149,7 +150,13 @@ const sl = lang === 'sl';
             specials.map((d) => (
               <li>
                 <figure>
-                  <Image src={d.image} alt={d.name[lang]} widths={[400, 640, 900]} sizes="(min-width: 900px) 30vw, 90vw" />
+                  <Picture
+                    src={d.image}
+                    alt={d.name[lang]}
+                    formats={formats}
+                    widths={[400, 640, 900]}
+                    sizes="(min-width: 900px) 30vw, (min-width: 560px) 45vw, 90vw"
+                  />
                 </figure>
                 <h3>{d.name[lang]}</h3>
                 <p>{d.desc[lang]}</p>
@@ -288,8 +295,8 @@ const sl = lang === 'sl';
     --green: #0b4b24;
     --gold: #a8833f;
     --line: #d8cfbb;
-    --serif: 'Fraunces Variable', Georgia, serif;
-    --sans: 'Instrument Sans Variable', system-ui, sans-serif;
+    --serif: var(--font-fraunces);
+    --sans: var(--font-instrument-sans);
     --pad: clamp(20px, 5vw, 72px);
     background: var(--paper);
     color: var(--ink);
@@ -369,8 +376,8 @@ const sl = lang === 'sl';
   }
   .top nav {
     display: flex;
-    gap: 32px;
-    font-size: 15px;
+    gap: 28px;
+    font-size: 17px;
     font-weight: 500;
   }
   .top nav a,
@@ -389,7 +396,7 @@ const sl = lang === 'sl';
   .langs {
     display: flex;
     gap: 12px;
-    font-size: 14px;
+    font-size: 16px;
     color: var(--muted);
   }
   .burger {
@@ -950,7 +957,7 @@ const sl = lang === 'sl';
       padding: 0 var(--pad) 12px;
       background: var(--paper);
       border-bottom: 1px solid var(--line);
-      font-size: 17px;
+      font-size: 19px;
     }
     .top:has(.burger[aria-expanded='true']) nav {
       display: flex;
