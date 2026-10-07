@@ -1,8 +1,20 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "arbor",
+  "main": "worker/index.ts",
   "compatibility_date": "2026-10-07",
   "assets": {
-    "directory": "./dist"
+    "directory": "./dist",
+    "binding": "ASSETS",
+    // Only the pages the Worker fills in and the editor go through it; everything else is served straight from assets.
+    "run_worker_first": ["/", "/en/", "/it/", "/de/", "/admin", "/admin/*"]
+  },
+  // Malice and opening hours. Without an id, wrangler creates the namespace on the first deploy.
+  "kv_namespaces": [{ "binding": "CONTENT" }],
+  "vars": {
+    // Cloudflare Access protecting /admin: Zero Trust team domain ("name.cloudflareaccess.com")
+    // and the Access application's audience (AUD) tag. The editor stays closed until both are set.
+    "ACCESS_TEAM_DOMAIN": "",
+    "ACCESS_AUD": ""
   }
 }

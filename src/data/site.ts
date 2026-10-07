@@ -1,5 +1,5 @@
 import type { ImageMetadata } from 'astro';
-import maliceJson from './malice.json';
+import { dayNames } from '../lib/content';
 
 import arbor1 from '../assets/photos/arbor1.jpg';
 import arbor2 from '../assets/photos/arbor2.jpg';
@@ -29,10 +29,6 @@ export const contact = {
   city: '4260 Bled',
   maps: 'https://www.google.com/maps/search/?api=1&query=Restavracija+Arbor+Bled%2C+Ljubljanska+cesta+4',
   menuPdf: '/meni.pdf',
-  // Opening hours in minutes from midnight, Europe/Ljubljana. 0 = Sunday.
-  opens: 10 * 60,
-  closes: 22 * 60,
-  closedDays: [0],
   seatsInside: 52,
   seatsTerrace: 55,
 };
@@ -150,28 +146,7 @@ export const specials: Special[] = [
   },
 ];
 
-export interface LunchDay {
-  day: number;
-  date: string | null;
-  items: string[];
-}
-
-export const malice = maliceJson as LunchDay[];
-
-const dayNames: Record<Lang, string[]> = {
-  sl: ['Nedelja', 'Ponedeljek', 'Torek', 'Sreda', 'Četrtek', 'Petek', 'Sobota'],
-  en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-  it: ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'],
-  de: ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'],
-};
-
 export const dayName = (day: number, lang: Lang) => dayNames[lang][day];
-
-export const shortDate = (iso: string | null) => {
-  if (!iso) return '';
-  const [, m, d] = iso.split('-').map(Number);
-  return `${d}. ${m}.`;
-};
 
 // 19 → "19 €", 17.5 → "17.50 €" (en) / "17,50 €" (others)
 export const price = (n: number, lang: Lang) =>
@@ -208,8 +183,6 @@ export const t = {
     contactTitle: 'Z veseljem vas pričakujemo!',
     contactSub: 'Pokličite nas za rezervacijo mize',
     hoursLabel: 'Odpiralni čas',
-    hours: 'Pon–sob · 10.00–22.00',
-    sunday: 'Nedelja zaprto',
     addressLabel: 'Naslov',
     openNow: 'Odprto zdaj',
     closedNow: 'Trenutno zaprto',
@@ -246,8 +219,6 @@ export const t = {
     contactTitle: 'We would love to welcome you soon!',
     contactSub: 'Call us for table reservations',
     hoursLabel: 'Opening hours',
-    hours: 'Mon–Sat · 10:00–22:00',
-    sunday: 'Closed on Sunday',
     addressLabel: 'Address',
     openNow: 'Open now',
     closedNow: 'Closed right now',
@@ -284,8 +255,6 @@ export const t = {
     contactTitle: 'Vi aspettiamo con piacere!',
     contactSub: 'Chiamateci per prenotare un tavolo',
     hoursLabel: 'Orari di apertura',
-    hours: 'Lun–sab · 10.00–22.00',
-    sunday: 'Domenica chiuso',
     addressLabel: 'Indirizzo',
     openNow: 'Aperto ora',
     closedNow: 'Chiuso al momento',
@@ -322,8 +291,6 @@ export const t = {
     contactTitle: 'Wir freuen uns auf Ihren Besuch!',
     contactSub: 'Rufen Sie uns für eine Tischreservierung an',
     hoursLabel: 'Öffnungszeiten',
-    hours: 'Mo–Sa · 10.00–22.00',
-    sunday: 'Sonntag geschlossen',
     addressLabel: 'Adresse',
     openNow: 'Jetzt geöffnet',
     closedNow: 'Derzeit geschlossen',
