@@ -6,7 +6,8 @@ import '@fontsource-variable/instrument-sans';
 import { dayNames } from '../lib/content';
 
 const names = dayNames.sl;
-const weeks = ['Ta teden', 'Naslednji teden'];
+// The week on show and the one after it; the tabs get their dates in the browser.
+const weeks = [0, 1];
 ---
 
 <!doctype html>
@@ -32,15 +33,11 @@ const weeks = ['Ta teden', 'Naslednji teden'];
           </p>
           <div class="tabs">
             {
-              weeks.map((label, w) => (
-                <button type="button" data-week={w} aria-pressed={w === 0 ? 'true' : 'false'}>
-                  {label}
-                </button>
-              ))
+              weeks.map((w) => <button type="button" data-week={w} aria-pressed={w === 0 ? 'true' : 'false'} />)
             }
           </div>
           {
-            weeks.map((_, w) => (
+            weeks.map((w) => (
               <div class="days" data-week-panel={w} hidden={w > 0}>
                 {[1, 2, 3, 4, 5].map((day) => (
                   <fieldset>
@@ -109,7 +106,7 @@ const weeks = ['Ta teden', 'Naslednji teden'];
 </html>
 
 <script>
-  import { addDays, shortDate, workWeek, type Content, type Span } from '../lib/content';
+  import { addDays, lunchWeek, shortDate, type Content, type Span } from '../lib/content';
 
   const API = '/admin/api/content';
   const $ = <T extends HTMLElement>(sel: string, root: ParentNode = document) => root.querySelector<T>(sel)!;
@@ -160,7 +157,10 @@ const weeks = ['Ta teden', 'Naslednji teden'];
   };
 
   const show = (data: Loaded) => {
-    const dates = [...workWeek(data.today), ...workWeek(addDays(data.today, 7))];
+    // From Saturday on the first tab is already the coming week, matching the public page.
+    const first = lunchWeek(data.today);
+    const dates = [...first, ...lunchWeek(addDays(first[0], 7))];
+    $$('[data-week]').forEach((tab, w) => (tab.textContent = `${shortDate(dates[w * 5])}–${shortDate(dates[w * 5 + 4])}`));
     $$('[data-malice]').forEach((box, i) => {
       box.dataset.date = dates[i];
       box.replaceChildren();

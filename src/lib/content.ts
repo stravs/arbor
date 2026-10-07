@@ -69,6 +69,10 @@ export const workWeek = (iso: string) => {
   return [0, 1, 2, 3, 4].map((i) => addDays(monday, i));
 };
 
+// The week of lunches on show: the current one, or the coming one from Saturday on,
+// so next week's malice appear as soon as they are entered at the weekend.
+export const lunchWeek = (iso: string) => workWeek(dayOf(iso) % 6 === 0 ? addDays(iso, 2) : iso);
+
 // The current date, weekday and minutes from midnight in Bled local time.
 export const localNow = (at = new Date()) => {
   const parts = new Intl.DateTimeFormat('en-US', {

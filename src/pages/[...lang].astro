@@ -8,7 +8,7 @@ import OpenStatus from '../components/OpenStatus.astro';
 import { allergens, menu } from '../data/menu';
 import { contact, dayName, images, langNames, langPath, langs, price, specials, t, type Lang } from '../data/site';
 import devMalice from '../data/malice.dev.json';
-import { defaultHours, exceptionLines, localNow, shortDate, weekLines, workWeek } from '../lib/content';
+import { defaultHours, exceptionLines, localNow, lunchWeek, shortDate, weekLines } from '../lib/content';
 
 export function getStaticPaths() {
   return langs.map((lang) => ({
@@ -29,7 +29,7 @@ const sl = lang === 'sl';
 // data-lunch-items and data-hours-lines. Without stored malice the lunch parts stay hidden.
 // `astro dev` runs without the Worker and shows sample dishes for the current week instead.
 const today = localNow().date;
-const week = workWeek(today);
+const week = lunchWeek(today);
 const sample: string[][] = import.meta.env.DEV ? devMalice : [];
 const lunchDays = [1, 2, 3, 4, 5].map((day, i) => ({ day, date: sample[i] ? week[i] : undefined, items: sample[i] ?? [] }));
 const noLunch = !sample.length;

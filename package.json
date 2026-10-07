@@ -8,6 +8,7 @@
     "build": "astro build",
     "preview": "astro build && wrangler dev",
     "sync:malice": "node scripts/sync-malice.mjs",
+    "seed:malice": "node scripts/seed-malice.mjs",
     "deploy": "astro build && wrangler deploy"
   },
   "dependencies": {

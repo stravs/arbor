@@ -6,6 +6,7 @@ import {
   defaultHours,
   exceptionLines,
   localNow,
+  lunchWeek,
   shortDate,
   weekLines,
   workWeek,
@@ -72,7 +73,7 @@ const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
 
 function fill({ malice, hours }: Content, lang: Lang) {
   const today = localNow().date;
-  const week = workWeek(today);
+  const week = lunchWeek(today);
   // Index 0 = Monday, matching data-day 1.
   const days = week.map((date) => malice[date] ?? []);
   const any = days.some((items) => items.length);
