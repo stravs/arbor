@@ -14,6 +14,7 @@ interface Props {
 const { lang } = Astro.props;
 const s = t[lang];
 const other: Lang = lang === 'sl' ? 'en' : 'sl';
+const sl = lang === 'sl';
 ---
 
 <Base lang={lang} themeColor="#f6f1e7">
@@ -25,8 +26,8 @@ const other: Lang = lang === 'sl' ? 'en' : 'sl';
       <nav id="nav" aria-label="Main">
         <a href="#arbor">{s.nav.about}</a>
         <a href="#specialitete">{s.nav.specials}</a>
-        <a href="#malice">{s.nav.lunch}</a>
         <a href="#meni">{s.nav.menu}</a>
+        {sl && <a href="#malice">{s.nav.lunch}</a>}
         <a href="#kontakt">{s.nav.contact}</a>
       </nav>
       <div class="top-end">
@@ -40,21 +41,25 @@ const other: Lang = lang === 'sl' ? 'en' : 'sl';
     <main id="top">
       <section class="hero">
         <div class="hero-copy">
-          <div class="today-card" data-lunch-today hidden>
-            {
-              malice.filter((d) => d.date && d.items.length).map((d) => (
-                <div class="panel" data-date-panel={d.date}>
-                  <p class="eyebrow">
-                    {s.lunchToday} · <span>{dayName(d.day, lang)} {shortDate(d.date)}</span>
-                  </p>
-                  <ol>
-                    {d.items.map((item) => <li>{item}</li>)}
-                  </ol>
-                </div>
-              ))
-            }
-            <p class="hours">11h–14h</p>
-          </div>
+          {
+            sl && (
+              <div class="today-card" data-lunch-today hidden>
+                {
+                  malice.filter((d) => d.date && d.items.length).map((d) => (
+                    <div class="panel" data-date-panel={d.date}>
+                      <p class="eyebrow">
+                        {s.lunchToday} · <span>{dayName(d.day, lang)} {shortDate(d.date)}</span>
+                      </p>
+                      <ol>
+                        {d.items.map((item) => <li>{item}</li>)}
+                      </ol>
+                    </div>
+                  ))
+                }
+                <p class="hours">11h–14h</p>
+              </div>
+            )
+          }
           <h1>{s.tagline}</h1>
           <p class="sub">{s.heroSub}</p>
           <div class="cta">
@@ -84,10 +89,6 @@ const other: Lang = lang === 'sl' ? 'en' : 'sl';
           <span>{s.hoursLabel}</span>
           <strong>{s.hours}</strong>
           <OpenStatus lang={lang} class="status" />
-        </li>
-        <li>
-          <span>{s.lunchTitle}</span>
-          <strong>{s.lunchHours}</strong>
         </li>
         <li>
           <span>{s.addressLabel}</span>
@@ -136,36 +137,8 @@ const other: Lang = lang === 'sl' ? 'en' : 'sl';
                 <figure>
                   <Image src={d.image} alt={d.name[lang]} widths={[400, 640, 900]} sizes="(min-width: 900px) 30vw, 90vw" />
                 </figure>
-                <div class="row">
-                  <h3>{d.name[lang]}</h3>
-                  <span class="price">{price(d.price, lang)}</span>
-                </div>
+                <h3>{d.name[lang]}</h3>
                 <p>{d.desc[lang]}</p>
-              </li>
-            ))
-          }
-        </ul>
-      </section>
-
-      <section class="lunch" id="malice">
-        <div class="head">
-          <div>
-            <p class="eyebrow">{s.lunchHours}</p>
-            <h2>{s.lunchWeek}</h2>
-          </div>
-          <p class="note">{s.lunchNote}</p>
-        </div>
-        <ul class="week">
-          {
-            malice.map((d) => (
-              <li data-day={d.day}>
-                <p class="day">
-                  {dayName(d.day, lang)} <span>{shortDate(d.date)}</span>
-                </p>
-                <p class="today">{s.today}</p>
-                <ol>
-                  {d.items.map((item) => <li>{item}</li>)}
-                </ol>
               </li>
             ))
           }
@@ -217,6 +190,34 @@ const other: Lang = lang === 'sl' ? 'en' : 'sl';
           </ul>
         </div>
       </section>
+
+      {
+        sl && (
+        <section class="lunch" id="malice">
+          <div class="head">
+            <div>
+              <p class="eyebrow">{s.lunchHours}</p>
+              <h2>{s.lunchWeek}</h2>
+            </div>
+          </div>
+          <ul class="week">
+            {
+              malice.map((d) => (
+                <li data-day={d.day}>
+                  <p class="day">
+                    {dayName(d.day, lang)} <span>{shortDate(d.date)}</span>
+                  </p>
+                  <p class="today">{s.today}</p>
+                  <ol>
+                    {d.items.map((item) => <li>{item}</li>)}
+                  </ol>
+                </li>
+              ))
+            }
+          </ul>
+        </section>
+        )
+      }
 
       <section class="contact" id="kontakt">
         <p class="eyebrow">{s.contactSub}</p>
@@ -450,17 +451,14 @@ const other: Lang = lang === 'sl' ? 'en' : 'sl';
   .today-card {
     position: relative;
     margin-bottom: clamp(28px, 3.5vw, 44px);
-    padding: clamp(20px, 2vw, 26px) clamp(22px, 2.4vw, 30px);
-    border-radius: 6px;
-    background: var(--green);
-    color: var(--paper);
+    padding: clamp(16px, 1.6vw, 20px) 0;
+    border-block: 1px solid var(--line);
   }
   .today-card[hidden] {
     display: none;
   }
   .today-card .eyebrow {
     padding-right: 76px;
-    color: #d9bd83;
   }
   .today-card .eyebrow span {
     white-space: nowrap;
@@ -473,28 +471,38 @@ const other: Lang = lang === 'sl' ? 'en' : 'sl';
   }
   .hours {
     position: absolute;
-    top: clamp(20px, 2vw, 26px);
-    right: clamp(22px, 2.4vw, 30px);
+    top: clamp(16px, 1.6vw, 20px);
+    right: 0;
     font-size: 13px;
     font-weight: 600;
     letter-spacing: 0.06em;
-    opacity: 0.65;
+    color: var(--muted);
   }
   .today-card ol {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px solid rgb(255 255 255 / 0.2);
+    margin-top: 12px;
   }
   .today-card ol li {
     padding: 0 16px;
-    border-left: 1px solid rgb(255 255 255 / 0.2);
+    border-left: 1px solid var(--line);
     font: 380 clamp(18px, 1.55vw, 22px) / 1.25 var(--serif);
   }
   .today-card ol li:first-child {
     padding-left: 0;
     border-left: 0;
+  }
+  .today-card ol {
+    counter-reset: n;
+  }
+  .today-card ol li {
+    counter-increment: n;
+  }
+  .today-card ol li::before {
+    content: counter(n) '.';
+    margin-right: 0.45em;
+    font-style: italic;
+    color: var(--gold);
   }
   .hero-art {
     position: relative;
@@ -525,12 +533,25 @@ const other: Lang = lang === 'sl' ? 'en' : 'sl';
   }
   .badge :global(img) {
     width: 104px;
+    /* The ring's centre sits above the image centre because of the stem. */
+    translate: 0 3.85%;
+    transform-origin: 50% 46.15%;
+    transition: transform 1s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .badge:hover :global(img) {
+    transform: rotate(360deg);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .badge :global(img) {
+      transition: none;
+    }
   }
 
   /* Info strip */
   .strip {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
     margin: 0 var(--pad);
     border-block: 1px solid var(--line);
   }
@@ -662,6 +683,9 @@ const other: Lang = lang === 'sl' ? 'en' : 'sl';
   .dishes li:hover :global(img) {
     transform: scale(1.04);
   }
+  .dishes h3 {
+    margin-top: 18px;
+  }
   .row {
     display: flex;
     align-items: baseline;
@@ -772,11 +796,6 @@ const other: Lang = lang === 'sl' ? 'en' : 'sl';
   }
   .lunch .eyebrow {
     color: #d9bd83;
-  }
-  .note {
-    max-width: 26em;
-    font-size: 15px;
-    opacity: 0.75;
   }
   .week {
     display: grid;
@@ -938,12 +957,9 @@ const other: Lang = lang === 'sl' ? 'en' : 'sl';
     }
     .today-card ol li,
     .today-card ol li:first-child {
-      padding: 10px 0;
+      padding: 4px 0;
       border-left: 0;
       font-size: 19px;
-    }
-    .today-card ol li + li {
-      border-top: 1px solid rgb(255 255 255 / 0.2);
     }
     .badge {
       left: -12px;
@@ -957,6 +973,9 @@ const other: Lang = lang === 'sl' ? 'en' : 'sl';
     .strip,
     .contact ul {
       grid-template-columns: 1fr;
+    }
+    .strip {
+      grid-auto-flow: row;
     }
     .strip li {
       padding: 16px 0;
