@@ -146,7 +146,7 @@ export const t = {
     ctaLunch: 'Dnevne malice',
     aboutTitle: 'Uživajte lokalno, uživajte sveže',
     about: [
-      'Restavracija Arbor se nahaja v samem centru Bleda. V prijetnem notranjem ambientu ali na letnem vrtu lahko uživate v odlični hrani, pogledu na Blejsko jezero, otok in grad.',
+      'Restavracija Arbor se nahaja v samem centru Bleda. V prijetnem notranjem ambientu ali na terasi lahko uživate v odlični hrani, pogledu na Blejsko jezero, otok in grad.',
       'Nudimo italijansko, mediteransko in domačo kulinariko v koraku s sodobnimi trendi prehranjevanja s poudarkom na zdravi in lahki prehrani.',
       'Restavracija je primerna za različne priložnosti, sprejme 52 gostov v notranjosti in 55 na terasi.',
     ],
