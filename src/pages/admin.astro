@@ -27,7 +27,9 @@ const weeks = ['Ta teden', 'Naslednji teden'];
       <form id="form" hidden>
         <section>
           <h2>Malice</h2>
-          <p class="hint">Ena jed v vsaki vrstici. Dan brez jedi se na strani ne prikaže.</p>
+          <p class="hint">
+            Med pisanjem se ponudijo jedi iz prejšnjih tednov. Dan brez jedi se na strani ne prikaže.
+          </p>
           <div class="tabs">
             {
               weeks.map((label, w) => (
@@ -41,16 +43,20 @@ const weeks = ['Ta teden', 'Naslednji teden'];
             weeks.map((_, w) => (
               <div class="days" data-week-panel={w} hidden={w > 0}>
                 {[1, 2, 3, 4, 5].map((day) => (
-                  <label>
-                    <span>
+                  <fieldset>
+                    <legend>
                       {names[day]} <small data-date-label />
-                    </span>
-                    <textarea rows="4" data-malice />
-                  </label>
+                    </legend>
+                    <div class="dishes" data-malice />
+                  </fieldset>
                 ))}
               </div>
             ))
           }
+          <template id="dish">
+            <input type="text" list="dishes" maxlength="200" autocomplete="off" aria-label="Jed" />
+          </template>
+          <datalist id="dishes"></datalist>
         </section>
 
         <section>
@@ -114,6 +120,15 @@ const weeks = ['Ta teden', 'Naslednji teden'];
   const saved = $('#saved');
   const exceptions = $('#exceptions');
   const template = $<HTMLTemplateElement>('#exception');
+  const dishTemplate = $<HTMLTemplateElement>('#dish');
+
+  type Loaded = Content & { today: string; dishes: string[] };
+
+  const addDish = (box: HTMLElement, dish = '') => {
+    const input = (dishTemplate.content.cloneNode(true) as DocumentFragment).firstElementChild as HTMLInputElement;
+    input.value = dish;
+    box.append(input);
+  };
 
   // 600 ↔ "10:00"
   const toClock = (mins: number) => `${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`;
@@ -144,12 +159,16 @@ const weeks = ['Ta teden', 'Naslednji teden'];
     exceptions.append(row);
   };
 
-  const show = (data: Content & { today: string }) => {
+  const show = (data: Loaded) => {
     const dates = [...workWeek(data.today), ...workWeek(addDays(data.today, 7))];
-    $$<HTMLTextAreaElement>('[data-malice]').forEach((area, i) => {
-      area.dataset.date = dates[i];
-      area.value = (data.malice[dates[i]] ?? []).join('\n');
+    $$('[data-malice]').forEach((box, i) => {
+      box.dataset.date = dates[i];
+      box.replaceChildren();
+      // Always leave an empty field to type the next dish into.
+      [...(data.malice[dates[i]] ?? []), ''].forEach((dish) => addDish(box, dish));
+      while (box.children.length < 3) addDish(box);
     });
+    $('#dishes').replaceChildren(...data.dishes.map((dish) => new Option(dish, dish)));
     $$('[data-date-label]').forEach((el, i) => (el.textContent = shortDate(dates[i])));
     $$('[data-weekday]').forEach((row) => setSpan(row, data.hours.week[Number(row.dataset.weekday)]));
     exceptions.replaceChildren();
@@ -161,7 +180,7 @@ const weeks = ['Ta teden', 'Naslednji teden'];
     $$('[data-weekday]').forEach((row) => (week[Number(row.dataset.weekday)] = getSpan(row)));
     return {
       malice: Object.fromEntries(
-        $$<HTMLTextAreaElement>('[data-malice]').map((area) => [area.dataset.date!, area.value.split('\n')]),
+        $$('[data-malice]').map((box) => [box.dataset.date!, $$<HTMLInputElement>('input', box).map((i) => i.value)]),
       ),
       hours: {
         week,
@@ -179,14 +198,19 @@ const weeks = ['Ta teden', 'Naslednji teden'];
     if (res?.status === 400) throw new Error('Preverite vnos: ure zapiranja morajo biti po urah odpiranja, datumi izjem pa veljavni.');
     if (!res?.ok || !res.headers.get('content-type')?.includes('json'))
       throw new Error('Povezava ni uspela. Osvežite stran in se po potrebi znova prijavite.');
-    return (await res.json()) as Content & { today: string };
+    return (await res.json()) as Loaded;
   };
 
   form.addEventListener('change', (e) => {
     const row = (e.target as HTMLElement).closest('.row');
     if (row) syncRow(row);
   });
-  form.addEventListener('input', () => (saved.textContent = ''));
+  form.addEventListener('input', (e) => {
+    saved.textContent = '';
+    const input = e.target as HTMLInputElement;
+    const box = input.closest<HTMLElement>('[data-malice]');
+    if (box && input === box.lastElementChild && input.value) addDish(box);
+  });
   form.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
     target.closest('[data-remove]')?.closest('.row')?.remove();
@@ -287,14 +311,13 @@ const weeks = ['Ta teden', 'Naslednji teden'];
     margin-top: 24px;
   }
   input,
-  textarea,
   button {
     font: inherit;
     color: inherit;
   }
   input[type='time'],
   input[type='date'],
-  textarea {
+  input[type='text'] {
     padding: 8px 10px;
     border: 1px solid var(--line);
     border-radius: 8px;
@@ -347,20 +370,28 @@ const weeks = ['Ta teden', 'Naslednji teden'];
     gap: 18px;
     margin-top: 20px;
   }
-  .days label span {
-    display: block;
+  fieldset {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  legend {
     margin-bottom: 6px;
+    padding: 0;
     font-weight: 600;
+  }
+  .dishes {
+    display: grid;
+    gap: 8px;
   }
   .days small {
     margin-left: 4px;
     font-weight: 400;
     color: var(--muted);
   }
-  textarea {
-    display: block;
+  input[type='text'] {
     width: 100%;
-    resize: vertical;
   }
   .hours {
     margin-top: 16px;

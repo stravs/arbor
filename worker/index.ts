@@ -26,6 +26,8 @@ interface Env {
 }
 
 const KEY = 'content';
+// Every day of malice ever saved, kept for the editor's dish suggestions. Never read by the public pages.
+const HISTORY = 'history';
 const pages = { '/': 'sl', '/en/': 'en', '/it/': 'it', '/de/': 'de' } as const;
 type Lang = (typeof pages)[keyof typeof pages];
 
@@ -143,8 +145,16 @@ async function api(request: Request, env: Env) {
   const today = localNow().date;
   if (request.method === 'GET') {
     // No cacheTtl here: the editor should see what was last saved.
-    const stored = await env.CONTENT.get<Partial<Content>>(KEY, 'json');
-    return Response.json({ today, malice: stored?.malice ?? {}, hours: stored?.hours ?? defaultHours });
+    const [stored, history] = await Promise.all([
+      env.CONTENT.get<Partial<Content>>(KEY, 'json'),
+      env.CONTENT.get<Malice>(HISTORY, 'json'),
+    ]);
+    return Response.json({
+      today,
+      malice: stored?.malice ?? {},
+      hours: stored?.hours ?? defaultHours,
+      dishes: dishes(history ?? {}),
+    });
   }
   if (request.method !== 'PUT') return new Response('Method not allowed', { status: 405 });
   const origin = request.headers.get('origin');
@@ -156,8 +166,27 @@ async function api(request: Request, env: Env) {
   } catch (e) {
     return Response.json({ error: e instanceof Error ? e.message : 'Invalid content' }, { status: 400 });
   }
-  await env.CONTENT.put(KEY, JSON.stringify(content));
-  return Response.json({ today, ...content });
+  // The saved malice are the whole truth from this Monday on; older days in the history stay as they were.
+  const monday = workWeek(today)[0];
+  const past = Object.entries((await env.CONTENT.get<Malice>(HISTORY, 'json')) ?? {}).filter(([date]) => date < monday);
+  const history: Malice = { ...Object.fromEntries(past), ...content.malice };
+  await Promise.all([
+    env.CONTENT.put(KEY, JSON.stringify(content)),
+    env.CONTENT.put(HISTORY, JSON.stringify(history)),
+  ]);
+  return Response.json({ today, ...content, dishes: dishes(history) });
+}
+
+// Distinct dishes from the history, most often served first. Spelling follows the latest use.
+function dishes(history: Malice) {
+  const seen = new Map<string, { text: string; count: number }>();
+  for (const date of Object.keys(history).sort()) {
+    for (const text of history[date]) {
+      const key = text.toLocaleLowerCase('sl');
+      seen.set(key, { text, count: (seen.get(key)?.count ?? 0) + 1 });
+    }
+  }
+  return [...seen.values()].sort((a, b) => b.count - a.count || a.text.localeCompare(b.text, 'sl')).map((d) => d.text);
 }
 
 const isDate = (v: unknown): v is string =>
