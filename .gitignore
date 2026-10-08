@@ -5,3 +5,5 @@ dist/
 .wrangler/
 .dev.vars
 scrape/
+test-results/
+playwright-report/

@@ -5,9 +5,9 @@ import {
   addDays,
   defaultHours,
   localNow,
-  lunchWeek,
   mergeDishes,
   shortDate,
+  shownWeek,
   weekLines,
   workWeek,
   type Content,
@@ -45,6 +45,12 @@ export default {
   },
 } satisfies ExportedHandler<Env>;
 
+// Local development and the tests (never with Access on) may say what time it is.
+const clock = (request: Request, env: Env) => {
+  const at = env.DEV_NO_AUTH ? request.headers.get('x-now') : null;
+  return localNow(at ? new Date(at) : undefined);
+};
+
 // Public pages
 
 async function load(env: Env): Promise<Content> {
@@ -61,7 +67,7 @@ async function page(request: Request, env: Env, lang: Lang) {
   const asset = await env.ASSETS.fetch(new Request(request, { headers }));
   if (!asset.ok || !asset.headers.get('content-type')?.includes('text/html')) return asset;
 
-  const filled = fill(await load(env), lang).transform(asset);
+  const filled = fill(await load(env), lang, clock(request, env)).transform(asset);
   const out = new Response(filled.body, filled);
   out.headers.delete('etag');
   out.headers.delete('last-modified');
@@ -71,9 +77,8 @@ async function page(request: Request, env: Env, lang: Lang) {
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-function fill({ malice, hours }: Content, lang: Lang) {
-  const { date: today, mins } = localNow();
-  const week = lunchWeek(today);
+function fill({ malice, hours }: Content, lang: Lang, { date: today, mins }: ReturnType<typeof localNow>) {
+  const week = shownWeek(today, malice);
   // Index 0 = Monday, matching data-day 1.
   const days = week.map((date) => malice[date] ?? []);
   const any = days.some((items) => items.length);
@@ -152,7 +157,7 @@ async function authorized(request: Request, env: Env) {
 }
 
 async function api(request: Request, env: Env) {
-  const today = localNow().date;
+  const today = clock(request, env).date;
   if (request.method === 'GET') {
     // KV may still answer with the previous version for up to a minute after a save, so each
     // save is stamped and the editor prefers its own newer copy (src/pages/pero.astro).

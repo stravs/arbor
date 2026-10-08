@@ -68,9 +68,17 @@ export const workWeek = (iso: string) => {
   return [0, 1, 2, 3, 4].map((i) => addDays(monday, i));
 };
 
-// The week of lunches on show: the current one, or the coming one from Saturday on,
-// so next week's malice appear as soon as they are entered at the weekend.
+// The week of lunches being worked on: the current one, or the coming one from Saturday on.
+// The editor opens on it.
 export const lunchWeek = (iso: string) => workWeek(dayOf(iso) % 6 === 0 ? addDays(iso, 2) : iso);
+
+// The week of lunches on the public page. At the weekend that is the coming week once any of
+// it has been entered, and until then still the week just ended. From Monday it is the new
+// week either way, so with nothing entered there are no malice to show.
+export const shownWeek = (iso: string, malice: Malice) => {
+  const coming = lunchWeek(iso);
+  return coming.some((date) => malice[date]?.length) ? coming : workWeek(iso);
+};
 
 // The current date, weekday and minutes from midnight in Bled local time.
 export const localNow = (at = new Date()) => {

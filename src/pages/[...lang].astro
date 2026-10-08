@@ -6,7 +6,7 @@ import OpenStatus from '../components/OpenStatus.astro';
 import { allergens, menu } from '../data/menu';
 import { contact, dayName, images, price, specials } from '../data/site';
 import { defaultLang, langNames, langPath, langs, t, type Lang } from '../i18n';
-import { defaultHours, localNow, lunchWeek, shortDate, weekLines, type Content } from '../lib/content';
+import { defaultHours, localNow, shortDate, shownWeek, weekLines, type Content } from '../lib/content';
 
 export function getStaticPaths() {
   return langs.map((lang) => ({
@@ -30,11 +30,11 @@ const formats: ImageOutputFormat[] = ['avif', 'webp'];
 // `astro dev` runs without the Worker and reads both from the local store instead, through
 // the editor's API (astro.config.mjs). Fill that store with `npm run seed:malice -- --local`.
 const today = localNow().date;
-const week = lunchWeek(today);
 const dev: Content | null = import.meta.env.DEV
   ? await fetch(new URL('/pero/api/content', Astro.url)).then((res) => res.json()).catch(() => null)
   : null;
 const stored = dev?.malice ?? {};
+const week = shownWeek(today, stored);
 const hours = dev?.hours ?? defaultHours;
 const lunchDays = [1, 2, 3, 4, 5]
   .map((day, i) => ({ day, date: stored[week[i]] ? week[i] : undefined, items: stored[week[i]] ?? [] }))
@@ -578,7 +578,7 @@ const allHours = weekLines(hours, lang);
     content: counter(n) '.';
     margin-right: 0.45em;
     font-style: italic;
-    color: var(--gold);
+    color: var(--green);
   }
   .hero-art {
     position: relative;
@@ -926,13 +926,13 @@ const allHours = weekLines(hours, lang);
   .week ol li {
     counter-increment: n;
     display: grid;
-    grid-template-columns: 26px 1fr;
+    grid-template-columns: 30px 1fr;
     padding: 10px 0;
     font-size: 19px;
     line-height: 1.4;
   }
   .week ol li::before {
-    content: counter(n);
+    content: counter(n) '.';
     font: italic 380 19px/1.4 var(--serif);
     color: #d9bd83;
   }
@@ -1115,7 +1115,7 @@ const allHours = weekLines(hours, lang);
       right: 0;
     }
     .week ol li {
-      grid-template-columns: 30px 1fr;
+      grid-template-columns: 34px 1fr;
       font-size: 21px;
     }
     .week ol li::before {

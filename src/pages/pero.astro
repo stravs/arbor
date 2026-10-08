@@ -83,7 +83,7 @@ const weeks = [0, 1];
 </html>
 
 <script>
-  import { addDays, lunchWeek, shortDate, type Content, type Span } from '../lib/content';
+  import { addDays, lunchWeek, shortDate, type Content, type Malice, type Span } from '../lib/content';
 
   const API = '/pero/api/content';
   const $ = <T extends HTMLElement>(sel: string, root: ParentNode = document) => root.querySelector<T>(sel)!;
@@ -144,10 +144,16 @@ const weeks = [0, 1];
     $$<HTMLInputElement>('[data-from], [data-to]', row).forEach((input) => (input.disabled = !open));
   };
 
+  // Stored malice for days the form has no fields for, sent back untouched with every save.
+  // At the weekend that is the week just ended, which stays on the public page until the
+  // coming week is entered.
+  let offForm: Malice = {};
+
   const show = (data: Loaded) => {
-    // From Saturday on the first tab is already the coming week, matching the public page.
+    // From Saturday on the first tab is already the coming week.
     const first = lunchWeek(data.today);
     const dates = [...first, ...lunchWeek(addDays(first[0], 7))];
+    offForm = Object.fromEntries(Object.entries(data.malice).filter(([date]) => !dates.includes(date)));
     $$('[data-week]').forEach((tab, w) => (tab.textContent = `${shortDate(dates[w * 5])}–${shortDate(dates[w * 5 + 4])}`));
     $$('[data-malice]').forEach((box, i) => {
       box.dataset.date = dates[i];
@@ -165,9 +171,12 @@ const weeks = [0, 1];
     const week: (Span | null)[] = [];
     $$('[data-weekday]').forEach((row) => (week[Number(row.dataset.weekday)] = getSpan(row)));
     return {
-      malice: Object.fromEntries(
-        $$('[data-malice]').map((box) => [box.dataset.date!, $$<HTMLInputElement>('input', box).map((i) => i.value)]),
-      ),
+      malice: {
+        ...offForm,
+        ...Object.fromEntries(
+          $$('[data-malice]').map((box) => [box.dataset.date!, $$<HTMLInputElement>('input', box).map((i) => i.value)]),
+        ),
+      },
       hours: { week },
     };
   };
