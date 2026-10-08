@@ -72,11 +72,14 @@ async function page(request: Request, env: Env, lang: Lang) {
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 function fill({ malice, hours }: Content, lang: Lang) {
-  const today = localNow().date;
+  const { date: today, mins } = localNow();
   const week = lunchWeek(today);
   // Index 0 = Monday, matching data-day 1.
   const days = week.map((date) => malice[date] ?? []);
   const any = days.some((items) => items.length);
+  // Lunch ends at 14:00. src/scripts/today.ts applies the same rule in the browser; deciding
+  // it here as well means today's card is already in place when the page first paints.
+  const lunchNow = !!malice[today]?.length && mins < 14 * 60;
   const index = (el: Element, attr: string) => Number(el.getAttribute(attr)) - 1;
 
   return new HTMLRewriter()
@@ -86,11 +89,20 @@ function fill({ malice, hours }: Content, lang: Lang) {
         else el.remove();
       },
     })
+    .on('[data-lunch-today]', {
+      element(el) {
+        if (lunchNow) el.removeAttribute('hidden');
+      },
+    })
     .on('[data-day]', {
       element(el) {
         const i = index(el, 'data-day');
-        if (days[i]?.length) el.setAttribute('data-date-panel', week[i]);
-        else el.remove();
+        if (!days[i]?.length) return el.remove();
+        el.setAttribute('data-date-panel', week[i]);
+        if (week[i] === today) {
+          el.setAttribute('data-today', '');
+          el.setAttribute('data-active', '');
+        }
       },
     })
     .on('[data-lunch-date]', {
@@ -142,9 +154,10 @@ async function authorized(request: Request, env: Env) {
 async function api(request: Request, env: Env) {
   const today = localNow().date;
   if (request.method === 'GET') {
-    // No cacheTtl here: the editor should see what was last saved.
+    // KV may still answer with the previous version for up to a minute after a save, so each
+    // save is stamped and the editor prefers its own newer copy (src/pages/pero.astro).
     const [stored, known] = await Promise.all([
-      env.CONTENT.get<Partial<Content>>(KEY, 'json'),
+      env.CONTENT.get<Partial<Content> & { saved?: number }>(KEY, 'json'),
       env.CONTENT.get<string[]>(DISHES, 'json'),
     ]);
     return Response.json({
@@ -152,6 +165,7 @@ async function api(request: Request, env: Env) {
       malice: stored?.malice ?? {},
       hours: stored?.hours ?? defaultHours,
       dishes: mergeDishes(known ?? [], stored?.malice ?? {}),
+      saved: stored?.saved ?? 0,
     });
   }
   if (request.method !== 'PUT') return new Response('Method not allowed', { status: 405 });
@@ -165,11 +179,12 @@ async function api(request: Request, env: Env) {
     return Response.json({ error: e instanceof Error ? e.message : 'Invalid content' }, { status: 400 });
   }
   const dishes = mergeDishes((await env.CONTENT.get<string[]>(DISHES, 'json')) ?? [], content.malice);
+  const saved = Date.now();
   await Promise.all([
-    env.CONTENT.put(KEY, JSON.stringify(content)),
+    env.CONTENT.put(KEY, JSON.stringify({ ...content, saved })),
     env.CONTENT.put(DISHES, JSON.stringify(dishes)),
   ]);
-  return Response.json({ today, ...content, dishes });
+  return Response.json({ today, ...content, dishes, saved });
 }
 
 const isDate = (v: unknown): v is string =>

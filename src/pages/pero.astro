@@ -92,9 +92,27 @@ const weeks = [0, 1];
   const form = $<HTMLFormElement>('#form');
   const status = $('#status');
   const saved = $('#saved');
+  const submit = $<HTMLButtonElement>('[type=submit]', form);
   const dishTemplate = $<HTMLTemplateElement>('#dish');
 
-  type Loaded = Content & { today: string; dishes: string[] };
+  type Loaded = Content & { today: string; dishes: string[]; saved: number };
+
+  // For a minute or so after a save the server can still hand out the version before it.
+  // The browser keeps what it saved, and a reload in that window shows that copy instead,
+  // so saving again can't bring the old version back.
+  const RECENT = 'pero:saved';
+  const remember = (data: Loaded) => {
+    try {
+      localStorage.setItem(RECENT, JSON.stringify({ at: Date.now(), data }));
+    } catch {}
+  };
+  const newest = (data: Loaded): Loaded => {
+    try {
+      const kept = JSON.parse(localStorage.getItem(RECENT) ?? 'null') as { at: number; data: Loaded } | null;
+      if (kept && Date.now() - kept.at < 5 * 60_000 && kept.data.saved > data.saved) return { ...kept.data, today: data.today };
+    } catch {}
+    return data;
+  };
 
   const addDish = (box: HTMLElement, dish = '') => {
     const input = (dishTemplate.content.cloneNode(true) as DocumentFragment).firstElementChild as HTMLInputElement;
@@ -154,6 +172,24 @@ const weeks = [0, 1];
     };
   };
 
+  // The save button only shows while the form differs from what was last loaded or saved,
+  // and the bar around it goes too unless it still has a message to show.
+  // Empty dish fields don't count, as one is added as soon as the last gets typed into.
+  const snapshot = () => {
+    const { malice, hours } = collect();
+    return JSON.stringify([Object.values(malice).map((dishes) => dishes.filter((d) => d.trim())), hours]);
+  };
+  let clean = '';
+  const syncSubmit = () => {
+    submit.hidden = snapshot() === clean;
+    $('.bar').hidden = submit.hidden && !saved.textContent;
+  };
+  const showClean = (data: Loaded) => {
+    show(data);
+    clean = snapshot();
+    syncSubmit();
+  };
+
   // An expired Access session answers with a redirect to the login page instead of JSON.
   const request = async (init?: RequestInit) => {
     const res = await fetch(API, init).catch(() => null);
@@ -166,12 +202,14 @@ const weeks = [0, 1];
   form.addEventListener('change', (e) => {
     const row = (e.target as HTMLElement).closest('.row');
     if (row) syncRow(row);
+    syncSubmit();
   });
   form.addEventListener('input', (e) => {
     saved.textContent = '';
     const input = e.target as HTMLInputElement;
     const box = input.closest<HTMLElement>('[data-malice]');
     if (box && input === box.lastElementChild && input.value) addDish(box);
+    syncSubmit();
   });
   form.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
@@ -184,20 +222,22 @@ const weeks = [0, 1];
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const button = $<HTMLButtonElement>('[type=submit]', form);
-    button.disabled = true;
+    submit.disabled = true;
     saved.textContent = 'Shranjujem …';
     try {
-      show(await request({ method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(collect()) }));
+      const data = await request({ method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(collect()) });
+      remember(data);
+      showClean(data);
       saved.textContent = 'Shranjeno. Na strani bo vidno v približno minuti.';
     } catch (err) {
       saved.textContent = (err as Error).message;
     }
-    button.disabled = false;
+    submit.disabled = false;
+    syncSubmit();
   });
 
   try {
-    show(await request());
+    showClean(newest(await request()));
     status.hidden = true;
     form.hidden = false;
   } catch (err) {
@@ -292,7 +332,8 @@ const weeks = [0, 1];
     cursor: pointer;
   }
   button:disabled {
-    opacity: 0.6;
+    opacity: 0.4;
+    cursor: default;
   }
   .tabs button[aria-pressed='false'] {
     background: none;
