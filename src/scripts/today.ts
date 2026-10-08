@@ -9,6 +9,7 @@ document.querySelectorAll<HTMLElement>('[data-day]').forEach((el) => {
 });
 
 // Today's lunch bar: show only the panel dated today, and only until lunch ends at 14:00.
+// `astro dev` keeps it up all day, so it can be worked on in the afternoon.
 document.querySelectorAll<HTMLElement>('[data-lunch-today]').forEach((bar) => {
   let any = false;
   bar.querySelectorAll<HTMLElement>('[data-date-panel]').forEach((el) => {
@@ -16,7 +17,7 @@ document.querySelectorAll<HTMLElement>('[data-lunch-today]').forEach((bar) => {
     el.toggleAttribute('data-active', on);
     any ||= on;
   });
-  bar.hidden = !any || mins >= 14 * 60;
+  bar.hidden = !any || (!import.meta.env.DEV && mins >= 14 * 60);
 });
 
 document.querySelectorAll<HTMLElement>('[data-open-status]').forEach((el) => {

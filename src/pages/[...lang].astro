@@ -117,19 +117,22 @@ const allHours = weekLines(hours, lang);
             <Image src={images.eatLocal} alt="Eat local, eat fresh" width={104} />
           </div>
         </div>
+        <ul class="strip">
+          <li>
+            <span>{s.hoursLabel}</span>
+            <strong data-hours-lines="open" set:html={openHours.join('<br />')} />
+            <OpenStatus lang={lang} hours={hours} class="status" />
+          </li>
+          <li>
+            <span>{s.phoneLabel}</span>
+            <strong><a href={`tel:${contact.tel}`}>{contact.phone}</a></strong>
+          </li>
+          <li>
+            <span>{s.addressLabel}</span>
+            <strong><a href={contact.maps}>{contact.street}, Bled</a></strong>
+          </li>
+        </ul>
       </section>
-
-      <ul class="strip">
-        <li>
-          <span>{s.hoursLabel}</span>
-          <strong data-hours-lines="open" set:html={openHours.join('<br />')} />
-          <OpenStatus lang={lang} hours={hours} class="status" />
-        </li>
-        <li>
-          <span>{s.addressLabel}</span>
-          <strong><a href={contact.maps}>{contact.street}, Bled</a></strong>
-        </li>
-      </ul>
 
       <section class="about" id="arbor">
         <div class="about-art">
@@ -283,7 +286,6 @@ const allHours = weekLines(hours, lang);
             <a href={`https://www.instagram.com/${contact.instagram}/`} rel="noopener">@{contact.instagram}</a>
           </li>
         </ul>
-        <p class="award">{s.award}</p>
       </section>
     </main>
 
@@ -311,21 +313,22 @@ const allHours = weekLines(hours, lang);
     --paper: #f6f1e7;
     --paper-2: #ede5d5;
     --ink: #1c241e;
-    --muted: #5d665e;
+    --muted: #4d564e;
     --green: #0b4b24;
     --gold: #a8833f;
     --line: #d8cfbb;
     --serif: var(--font-fraunces);
     --sans: var(--font-instrument-sans);
     --pad: clamp(20px, 5vw, 72px);
+    --top-h: 90px;
     background: var(--paper);
     color: var(--ink);
-    font: 17px/1.6 var(--sans);
+    font: 19px/1.6 var(--sans);
     overflow-x: clip;
   }
 
   .eyebrow {
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 600;
     letter-spacing: 0.14em;
     text-transform: uppercase;
@@ -352,7 +355,7 @@ const allHours = weekLines(hours, lang);
     background: var(--green);
     color: var(--paper);
     font-weight: 600;
-    font-size: 15px;
+    font-size: 17px;
     text-decoration: none;
     transition: background 0.2s;
   }
@@ -370,7 +373,7 @@ const allHours = weekLines(hours, lang);
   }
   .link {
     font-weight: 600;
-    font-size: 15px;
+    font-size: 17px;
     color: var(--green);
     text-decoration: none;
     white-space: nowrap;
@@ -389,7 +392,8 @@ const allHours = weekLines(hours, lang);
     align-items: center;
     justify-content: space-between;
     gap: 24px;
-    padding: 20px var(--pad);
+    height: var(--top-h);
+    padding: 0 var(--pad);
   }
   .logo :global(img) {
     width: 108px;
@@ -397,7 +401,7 @@ const allHours = weekLines(hours, lang);
   .top nav {
     display: flex;
     gap: 28px;
-    font-size: 17px;
+    font-size: 19px;
     font-weight: 500;
   }
   .top nav a,
@@ -416,7 +420,7 @@ const allHours = weekLines(hours, lang);
   .langs {
     display: flex;
     gap: 12px;
-    font-size: 16px;
+    font-size: 18px;
     color: var(--muted);
   }
   .burger {
@@ -465,23 +469,52 @@ const allHours = weekLines(hours, lang);
     transform: rotate(-45deg);
   }
 
-  /* Hero */
+  /* Hero: fills the first screen, with the info strip along its bottom edge.
+     Copy and photo share the second row, centred by the empty rows around it. */
   .hero {
     display: grid;
     grid-template-columns: 1.1fr 0.9fr;
+    grid-template-rows: 1fr auto 1fr auto;
     align-items: center;
-    gap: clamp(32px, 6vw, 96px);
-    padding: clamp(16px, 2.5vw, 36px) var(--pad) clamp(48px, 7vw, 96px);
+    column-gap: clamp(32px, 6vw, 96px);
+    min-height: calc(100svh - var(--top-h));
+    padding: clamp(8px, 2svh, 28px) var(--pad) 0;
+  }
+  .hero-copy,
+  .hero-art {
+    grid-row: 2;
+  }
+  /* With today's lunch showing, its top edge lines up with the top of the photo, while
+     the headline keeps the place it has when the whole column is centred. */
+  @media (min-width: 901px) {
+    .hero:has(.today-card:not([hidden])) {
+      align-items: start;
+    }
+    .hero:has(.today-card:not([hidden])) .hero-copy {
+      display: flex;
+      flex-direction: column;
+      align-self: stretch;
+    }
+    .today-card:not([hidden]) ~ h1 {
+      margin-top: auto;
+    }
+    .today-card:not([hidden]) ~ .cta {
+      margin-bottom: auto;
+    }
   }
   h1 {
-    font-size: clamp(44px, 6.2vw, 88px);
+    font-size: clamp(44px, min(6.2vw, 10svh), 88px);
     line-height: 0.98;
     letter-spacing: -0.035em;
   }
+  /* With today's lunch above it the headline gives way, to keep the strip on screen. */
+  .today-card:not([hidden]) ~ h1 {
+    font-size: clamp(40px, min(6.2vw, 7svh), 88px);
+  }
   .sub {
     max-width: 30em;
-    margin-top: 28px;
-    font-size: clamp(17px, 1.5vw, 20px);
+    margin-top: clamp(16px, 3svh, 28px);
+    font-size: clamp(19px, 1.6vw, 22px);
     color: var(--muted);
   }
   .cta {
@@ -489,11 +522,11 @@ const allHours = weekLines(hours, lang);
     flex-wrap: wrap;
     align-items: center;
     gap: 16px 28px;
-    margin-top: 36px;
+    margin-top: clamp(20px, 4svh, 36px);
   }
   .today-card {
     position: relative;
-    margin-bottom: clamp(28px, 3.5vw, 44px);
+    margin-bottom: clamp(16px, 3.5svh, 44px);
     padding: clamp(16px, 1.6vw, 20px) 0;
     border-block: 1px solid var(--line);
   }
@@ -501,7 +534,7 @@ const allHours = weekLines(hours, lang);
     display: none;
   }
   .today-card .eyebrow {
-    padding-right: 76px;
+    padding-right: 88px;
   }
   .today-card .eyebrow span {
     white-space: nowrap;
@@ -516,7 +549,7 @@ const allHours = weekLines(hours, lang);
     position: absolute;
     top: clamp(16px, 1.6vw, 20px);
     right: 0;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 600;
     letter-spacing: 0.06em;
     color: var(--muted);
@@ -529,7 +562,7 @@ const allHours = weekLines(hours, lang);
   .today-card ol li {
     padding: 0 16px;
     border-left: 1px solid var(--line);
-    font: 380 clamp(18px, 1.55vw, 22px) / 1.25 var(--serif);
+    font: 380 clamp(20px, 1.65vw, 24px) / 1.25 var(--serif);
   }
   .today-card ol li:first-child {
     padding-left: 0;
@@ -551,7 +584,8 @@ const allHours = weekLines(hours, lang);
     position: relative;
     justify-self: end;
     width: 100%;
-    max-width: 520px;
+    /* Capped by the viewport height too, so the arch never pushes the strip off screen. */
+    max-width: clamp(240px, (100svh - var(--top-h) - 200px) * 0.8, 520px);
   }
   .arch {
     overflow: hidden;
@@ -595,7 +629,8 @@ const allHours = weekLines(hours, lang);
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: 1fr;
-    margin: 0 var(--pad);
+    grid-area: 4 / 1 / auto / -1;
+    margin-top: clamp(20px, 4svh, 44px);
     border-block: 1px solid var(--line);
   }
   .strip li {
@@ -613,7 +648,7 @@ const allHours = weekLines(hours, lang);
   }
   .strip span:first-child {
     width: 100%;
-    font-size: 13px;
+    font-size: 15px;
     color: var(--muted);
   }
   .strip strong {
@@ -624,7 +659,7 @@ const allHours = weekLines(hours, lang);
     text-underline-offset: 4px;
   }
   .page :global(.status) {
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 600;
     color: var(--muted);
   }
@@ -661,6 +696,9 @@ const allHours = weekLines(hours, lang);
     overflow: hidden;
     border-radius: 6px;
   }
+  .about-art .tall {
+    border-radius: 999px 999px 6px 6px;
+  }
   .about-art .small {
     position: absolute;
     right: 0;
@@ -690,7 +728,7 @@ const allHours = weekLines(hours, lang);
   }
   dd {
     margin: 6px 0 0;
-    font-size: 14px;
+    font-size: 16px;
     color: var(--muted);
   }
 
@@ -747,7 +785,7 @@ const allHours = weekLines(hours, lang);
   }
   .dishes p {
     margin-top: 4px;
-    font-size: 15px;
+    font-size: 17px;
     color: var(--muted);
   }
 
@@ -778,21 +816,21 @@ const allHours = weekLines(hours, lang);
   }
   h4 {
     margin: 0;
-    font: 500 17px/1.35 var(--sans);
+    font: 500 19px/1.35 var(--sans);
   }
   .wait {
     margin-left: 4px;
-    font-size: 13px;
+    font-size: 15px;
     color: var(--gold);
     white-space: nowrap;
   }
   .cat .price {
-    font-size: 19px;
+    font-size: 21px;
     font-variant-numeric: lining-nums;
   }
   .cat li p {
     margin-top: 2px;
-    font-size: 15px;
+    font-size: 17px;
     color: var(--muted);
   }
   .cat .tags {
@@ -805,7 +843,7 @@ const allHours = weekLines(hours, lang);
     padding: 1px 6px;
     border: 1px solid var(--line);
     border-radius: 4px;
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 600;
     text-decoration: none;
   }
@@ -816,7 +854,7 @@ const allHours = weekLines(hours, lang);
   }
   .legend > p:not(.eyebrow) {
     margin-top: 6px;
-    font-size: 14px;
+    font-size: 16px;
     color: var(--muted);
   }
   .legend ul {
@@ -824,7 +862,7 @@ const allHours = weekLines(hours, lang);
     flex-wrap: wrap;
     gap: 6px 24px;
     margin-top: 16px;
-    font-size: 14px;
+    font-size: 16px;
   }
   .legend b {
     margin-right: 4px;
@@ -857,13 +895,13 @@ const allHours = weekLines(hours, lang);
     padding-left: 0;
   }
   .day {
-    font: 380 26px/1.1 var(--serif);
+    font: 380 28px/1.1 var(--serif);
   }
   .day span {
     display: block;
     margin-top: 6px;
-    font: 500 13px/1 var(--sans);
-    opacity: 0.6;
+    font: 500 16px/1 var(--sans);
+    opacity: 0.7;
   }
   .today {
     display: none;
@@ -873,7 +911,7 @@ const allHours = weekLines(hours, lang);
     border-radius: 999px;
     background: #d9bd83;
     color: var(--green);
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -888,14 +926,14 @@ const allHours = weekLines(hours, lang);
   .week ol li {
     counter-increment: n;
     display: grid;
-    grid-template-columns: 22px 1fr;
+    grid-template-columns: 26px 1fr;
     padding: 10px 0;
-    font-size: 15px;
+    font-size: 19px;
     line-height: 1.4;
   }
   .week ol li::before {
     content: counter(n);
-    font: italic 380 15px/1.4 var(--serif);
+    font: italic 380 19px/1.4 var(--serif);
     color: #d9bd83;
   }
   .week ol li + li {
@@ -935,17 +973,12 @@ const allHours = weekLines(hours, lang);
   .contact li span {
     display: block;
     margin-bottom: 6px;
-    font-size: 13px;
+    font-size: 15px;
     color: var(--muted);
   }
   .contact li a {
     text-decoration-color: var(--line);
     text-underline-offset: 4px;
-  }
-  .award {
-    margin-top: 64px;
-    font-size: 14px;
-    color: var(--muted);
   }
 
   footer {
@@ -954,7 +987,7 @@ const allHours = weekLines(hours, lang);
     gap: 16px;
     padding: 24px var(--pad) 64px;
     border-top: 1px solid var(--line);
-    font-size: 14px;
+    font-size: 16px;
     color: var(--muted);
   }
 
@@ -977,7 +1010,7 @@ const allHours = weekLines(hours, lang);
       padding: 0 var(--pad) 12px;
       background: var(--paper);
       border-bottom: 1px solid var(--line);
-      font-size: 19px;
+      font-size: 21px;
     }
     .top:has(.burger[aria-expanded='true']) nav {
       display: flex;
@@ -990,9 +1023,30 @@ const allHours = weekLines(hours, lang);
     .about {
       grid-template-columns: 1fr;
     }
+    /* Stacked as: today's lunch, photo, copy, strip. */
+    .hero {
+      grid-template-rows: none;
+      min-height: 0;
+      gap: 0;
+      padding-top: 8px;
+    }
+    .hero-copy {
+      display: contents;
+    }
+    .today-card {
+      order: -2;
+      margin-bottom: 24px;
+    }
     .hero-art {
+      grid-row: auto;
+      order: -1;
       justify-self: center;
       max-width: 420px;
+      margin-bottom: 24px;
+    }
+    .strip {
+      grid-row: auto;
+      margin-top: 40px;
     }
     .today-card ol {
       display: block;
@@ -1002,7 +1056,7 @@ const allHours = weekLines(hours, lang);
     .today-card ol li:first-child {
       padding: 4px 0;
       border-left: 0;
-      font-size: 19px;
+      font-size: 21px;
     }
     .badge {
       left: -12px;
@@ -1021,7 +1075,18 @@ const allHours = weekLines(hours, lang);
       grid-auto-flow: row;
     }
     .strip li {
-      padding: 16px 0;
+      justify-content: center;
+      gap: 0 10px;
+      padding: 8px 0;
+      font-size: 16px;
+      text-align: center;
+    }
+    .page :global(.status) {
+      font-size: 14px;
+    }
+    .strip span:first-child {
+      position: absolute;
+      clip-path: inset(50%);
     }
     .strip li + li {
       border-left: 0;
@@ -1049,16 +1114,22 @@ const allHours = weekLines(hours, lang);
       top: 30px;
       right: 0;
     }
+    .week ol li {
+      grid-template-columns: 30px 1fr;
+      font-size: 21px;
+    }
+    .week ol li::before {
+      font-size: 21px;
+    }
   }
   @media (max-width: 560px) {
     .cta {
-      flex-wrap: nowrap;
-      gap: 2.5vw;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
     }
     .cta .btn {
-      padding: 11px 3.5vw;
-      font-size: clamp(11px, 3.5vw, 15px);
-      white-space: nowrap;
+      justify-content: center;
     }
     .dishes {
       grid-template-columns: 1fr;
