@@ -7,12 +7,12 @@
     "directory": "./dist",
     "binding": "ASSETS",
     // Only the pages the Worker fills in and the editor go through it; everything else is served straight from assets.
-    "run_worker_first": ["/", "/en/", "/it/", "/de/", "/admin", "/admin/*"]
+    "run_worker_first": ["/", "/en/", "/it/", "/de/", "/pero", "/pero/*"]
   },
   // Malice and opening hours. Without an id, wrangler creates the namespace on the first deploy.
   "kv_namespaces": [{ "binding": "CONTENT" }],
   "vars": {
-    // Cloudflare Access protecting /admin: Zero Trust team domain ("name.cloudflareaccess.com")
+    // Cloudflare Access protecting /pero: Zero Trust team domain ("name.cloudflareaccess.com")
     // and the Access application's audience (AUD) tag. The editor stays closed until both are set.
     "ACCESS_TEAM_DOMAIN": "silent-snow-2e7f.cloudflareaccess.com",
     "ACCESS_AUD": "6cb32d3314a7fe13836452be71be446b29f9be77a88edb6edac0d6ac2e540687"

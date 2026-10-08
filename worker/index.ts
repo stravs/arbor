@@ -35,9 +35,9 @@ type Lang = (typeof pages)[keyof typeof pages];
 export default {
   async fetch(request, env) {
     const { pathname } = new URL(request.url);
-    if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+    if (pathname === '/pero' || pathname.startsWith('/pero/')) {
       if (!(await authorized(request, env))) return new Response('Forbidden', { status: 403 });
-      return pathname === '/admin/api/content' ? api(request, env) : env.ASSETS.fetch(request);
+      return pathname === '/pero/api/content' ? api(request, env) : env.ASSETS.fetch(request);
     }
     const lang = pages[pathname as keyof typeof pages];
     if (lang && (request.method === 'GET' || request.method === 'HEAD')) return page(request, env, lang);
@@ -126,7 +126,7 @@ function fill({ malice, hours }: Content, lang: Lang) {
 
 let jwks: ReturnType<typeof createRemoteJWKSet> | undefined;
 
-// Cloudflare Access already blocks /admin at the edge; verifying its token here keeps
+// Cloudflare Access already blocks /pero at the edge; verifying its token here keeps
 // the editor closed even if the Access application is missing or misconfigured.
 async function authorized(request: Request, env: Env) {
   if (env.DEV_NO_AUTH) return true;
