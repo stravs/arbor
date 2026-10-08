@@ -1,18 +1,20 @@
 ---
 import { t, type Lang } from '../i18n';
-import { defaultHours, weekLines } from '../lib/content';
+import { defaultHours, weekLines, type Hours } from '../lib/content';
 
 interface Props {
   lang: Lang;
+  // Only given in `astro dev`; the Worker fills in the stored hours on the live site.
+  hours?: Hours;
   class?: string;
 }
-const { lang, class: className } = Astro.props;
+const { lang, hours = defaultHours, class: className } = Astro.props;
 ---
 
 <span
   class={className}
   data-open-status
-  data-hours={JSON.stringify(defaultHours)}
+  data-hours={JSON.stringify(hours)}
   data-open-text={t[lang].openNow}
   data-closed-text={t[lang].closedNow}
->{weekLines(defaultHours, lang, true)[0]}</span>
+>{weekLines(hours, lang, true)[0]}</span>

@@ -25,6 +25,16 @@ export interface Content {
   hours: Hours;
 }
 
+// The known dishes plus those in the given malice, each once, in alphabetical order.
+// Upper and lower case count as the same dish; the spelling follows the latest use.
+export const mergeDishes = (known: string[], malice: Malice) => {
+  const seen = new Map(known.map((dish) => [dish.toLocaleLowerCase('sl'), dish]));
+  for (const date of Object.keys(malice).sort()) {
+    for (const dish of malice[date]) seen.set(dish.toLocaleLowerCase('sl'), dish);
+  }
+  return [...seen.values()].sort((a, b) => a.localeCompare(b, 'sl'));
+};
+
 const regular: Span = [10 * 60, 22 * 60];
 export const defaultHours: Hours = {
   week: [null, regular, regular, regular, regular, regular, regular],

@@ -6,7 +6,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { defaultHours, localNow, lunchWeek } from '../src/lib/content.ts';
+import { defaultHours, localNow, lunchWeek, mergeDishes } from '../src/lib/content.ts';
 
 const target = process.argv[2];
 if (target !== '--local' && target !== '--remote') {
@@ -41,5 +41,5 @@ const malice = Object.fromEntries(week.map((date, i) => [date, days[i] ?? []]).f
 
 const content = get('content');
 put('content', { malice: { ...content?.malice, ...malice }, hours: content?.hours ?? defaultHours });
-put('history', { ...get('history'), ...malice });
+put('dishes', mergeDishes(get('dishes') ?? [], malice));
 console.log(`Seeded malice for ${Object.keys(malice).join(', ')} (${target.slice(2)})`);

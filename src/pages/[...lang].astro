@@ -5,9 +5,8 @@ import Base from '../layouts/Base.astro';
 import OpenStatus from '../components/OpenStatus.astro';
 import { allergens, menu } from '../data/menu';
 import { contact, dayName, images, price, specials } from '../data/site';
-import devMalice from '../data/malice.dev.json';
 import { defaultLang, langNames, langPath, langs, t, type Lang } from '../i18n';
-import { defaultHours, exceptionLines, localNow, lunchWeek, shortDate, weekLines } from '../lib/content';
+import { defaultHours, exceptionLines, localNow, lunchWeek, shortDate, weekLines, type Content } from '../lib/content';
 
 export function getStaticPaths() {
   return langs.map((lang) => ({
@@ -28,14 +27,21 @@ const formats: ImageOutputFormat[] = ['avif', 'webp'];
 // Malice and opening hours are filled in at the edge from KV (worker/index.ts), so the
 // markup below only carries the hooks: data-lunch, data-day, data-lunch-date,
 // data-lunch-items and data-hours-lines. Without stored malice the lunch parts stay hidden.
-// `astro dev` runs without the Worker and shows sample dishes for the current week instead.
+// `astro dev` runs without the Worker and reads both from the local store instead, through
+// the editor's API (astro.config.mjs). Fill that store with `npm run seed:malice -- --local`.
 const today = localNow().date;
 const week = lunchWeek(today);
-const sample: string[][] = import.meta.env.DEV ? devMalice : [];
-const lunchDays = [1, 2, 3, 4, 5].map((day, i) => ({ day, date: sample[i] ? week[i] : undefined, items: sample[i] ?? [] }));
-const noLunch = !sample.length;
-const openHours = weekLines(defaultHours, lang, true);
-const allHours = [...weekLines(defaultHours, lang), ...exceptionLines(defaultHours, lang, today)];
+const dev: Content | null = import.meta.env.DEV
+  ? await fetch(new URL('/pero/api/content', Astro.url)).then((res) => res.json()).catch(() => null)
+  : null;
+const stored = dev?.malice ?? {};
+const hours = dev?.hours ?? defaultHours;
+const lunchDays = [1, 2, 3, 4, 5]
+  .map((day, i) => ({ day, date: stored[week[i]] ? week[i] : undefined, items: stored[week[i]] ?? [] }))
+  .filter((d) => !import.meta.env.DEV || d.items.length);
+const noLunch = !lunchDays.length || !import.meta.env.DEV;
+const openHours = weekLines(hours, lang, true);
+const allHours = [...weekLines(hours, lang), ...exceptionLines(hours, lang, today)];
 ---
 
 <Base lang={lang}>
@@ -117,7 +123,7 @@ const allHours = [...weekLines(defaultHours, lang), ...exceptionLines(defaultHou
         <li>
           <span>{s.hoursLabel}</span>
           <strong data-hours-lines="open" set:html={openHours.join('<br />')} />
-          <OpenStatus lang={lang} class="status" />
+          <OpenStatus lang={lang} hours={hours} class="status" />
         </li>
         <li>
           <span>{s.addressLabel}</span>

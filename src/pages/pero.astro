@@ -1,8 +1,10 @@
 ---
 // Editor for malice and opening hours. Sits behind Cloudflare Access and saves
-// through the Worker (worker/index.ts), so it only works in `npm run preview` or deployed.
+// through the Worker (worker/index.ts); `astro dev` runs the same API from astro.config.mjs.
 import '@fontsource-variable/fraunces';
 import '@fontsource-variable/instrument-sans';
+import { Image } from 'astro:assets';
+import { images } from '../data/site';
 import { dayNames } from '../lib/content';
 
 const names = dayNames.sl;
@@ -21,16 +23,12 @@ const weeks = [0, 1];
   </head>
   <body>
     <main>
-      <p class="eyebrow">Restavracija Arbor</p>
-      <h1>Urejanje strani</h1>
+      <Image class="logo" src={images.logo} alt="Arbor" width={108} loading="eager" />
       <p id="status" role="status">Nalagam …</p>
 
       <form id="form" hidden>
         <section>
           <h2>Malice</h2>
-          <p class="hint">
-            Med pisanjem se ponudijo jedi iz prejšnjih tednov. Dan brez jedi se na strani ne prikaže.
-          </p>
           <div class="tabs">
             {
               weeks.map((w) => <button type="button" data-week={w} aria-pressed={w === 0 ? 'true' : 'false'} />)
@@ -66,8 +64,8 @@ const weeks = [0, 1];
                     <input type="checkbox" data-open /> {names[day]}
                   </label>
                   <span class="times">
-                    <input type="time" data-from aria-label="Odpremo ob" required /> –
-                    <input type="time" data-to aria-label="Zapremo ob" required />
+                    <input type="text" inputmode="numeric" maxlength="5" placeholder="10:00" pattern="([01]?\d|2[0-3])[:.][0-5]\d" title="Ura v 24-urni obliki, npr. 10:00 ali 22:00" data-from aria-label="Odpremo ob" required /> –
+                    <input type="text" inputmode="numeric" maxlength="5" placeholder="10:00" pattern="([01]?\d|2[0-3])[:.][0-5]\d" title="Ura v 24-urni obliki, npr. 10:00 ali 22:00" data-to aria-label="Zapremo ob" required />
                   </span>
                 </div>
               ))
@@ -80,15 +78,27 @@ const weeks = [0, 1];
           <template id="exception">
             <div class="row exception">
               <span class="dates">
-                <input type="date" data-date-from aria-label="Od" required /> –
-                <input type="date" data-date-to aria-label="Do" />
+<span class="date">
+                  <input type="text" inputmode="numeric" maxlength="10" placeholder="dd/mm/llll" pattern="\s*(0?[1-9]|[12]\d|3[01])/(0?[1-9]|1[0-2])/20\d\d\s*" title="Datum, npr. 24/12/2026" data-date-from aria-label="Od" required />
+                  <input type="date" tabindex="-1" aria-hidden="true" />
+                  <button type="button" data-pick aria-label="Koledar">
+                    <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="2" /><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3" /></svg>
+                  </button>
+                </span> –
+                <span class="date">
+                  <input type="text" inputmode="numeric" maxlength="10" placeholder="dd/mm/llll" pattern="\s*(0?[1-9]|[12]\d|3[01])/(0?[1-9]|1[0-2])/20\d\d\s*" title="Datum, npr. 24/12/2026" data-date-to aria-label="Do" />
+                  <input type="date" tabindex="-1" aria-hidden="true" />
+                  <button type="button" data-pick aria-label="Koledar">
+                    <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="2" /><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3" /></svg>
+                  </button>
+                </span>
               </span>
               <label>
                 <input type="checkbox" data-open /> Odprto
               </label>
               <span class="times">
-                <input type="time" data-from aria-label="Odpremo ob" required /> –
-                <input type="time" data-to aria-label="Zapremo ob" required />
+                <input type="text" inputmode="numeric" maxlength="5" placeholder="10:00" pattern="([01]?\d|2[0-3])[:.][0-5]\d" title="Ura v 24-urni obliki, npr. 10:00 ali 22:00" data-from aria-label="Odpremo ob" required /> –
+                <input type="text" inputmode="numeric" maxlength="5" placeholder="10:00" pattern="([01]?\d|2[0-3])[:.][0-5]\d" title="Ura v 24-urni obliki, npr. 10:00 ali 22:00" data-to aria-label="Zapremo ob" required />
               </span>
               <button type="button" class="remove" data-remove>Odstrani</button>
             </div>
@@ -97,8 +107,8 @@ const weeks = [0, 1];
         </section>
 
         <div class="bar">
-          <button type="submit">Shrani</button>
           <span id="saved" role="status"></span>
+          <button type="submit">Shrani</button>
         </div>
       </form>
     </main>
@@ -127,9 +137,20 @@ const weeks = [0, 1];
     box.append(input);
   };
 
-  // 600 ↔ "10:00"
+  // 600 ↔ "10:00". Plain text fields, because <input type="time"> shows AM/PM in browsers set to English.
   const toClock = (mins: number) => `${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`;
-  const toMins = (clock: string) => Number(clock.slice(0, 2)) * 60 + Number(clock.slice(3, 5));
+  const toMins = (clock: string) => {
+    const [hours, mins] = clock.split(/[:.]/).map(Number);
+    return hours * 60 + mins;
+  };
+
+  // "2026-12-24" ↔ "24/12/2026". The date is a text field because <input type="date"> shows it in the
+  // browser's language; a hidden one beside it still provides the calendar.
+  const toDmy = (iso: string) => iso.split('-').reverse().join('/');
+  const toIso = (text: string) => {
+    const [d, m, y] = text.trim().split('/');
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+  };
 
   // A row with an "open" checkbox and two time fields: a weekday or an exception.
   const setSpan = (row: ParentNode, span: Span | null) => {
@@ -150,8 +171,8 @@ const weeks = [0, 1];
 
   const addException = (e?: Content['hours']['exceptions'][number]) => {
     const row = (template.content.cloneNode(true) as DocumentFragment).firstElementChild as HTMLElement;
-    $<HTMLInputElement>('[data-date-from]', row).value = e?.from ?? '';
-    $<HTMLInputElement>('[data-date-to]', row).value = e && e.to !== e.from ? e.to : '';
+    $<HTMLInputElement>('[data-date-from]', row).value = e ? toDmy(e.from) : '';
+    $<HTMLInputElement>('[data-date-to]', row).value = e && e.to !== e.from ? toDmy(e.to) : '';
     setSpan(row, e?.hours ?? null);
     exceptions.append(row);
   };
@@ -185,8 +206,9 @@ const weeks = [0, 1];
       hours: {
         week,
         exceptions: $$('.exception').map((row) => {
-          const from = $<HTMLInputElement>('[data-date-from]', row).value;
-          return { from, to: $<HTMLInputElement>('[data-date-to]', row).value || from, hours: getSpan(row) };
+          const from = toIso($<HTMLInputElement>('[data-date-from]', row).value);
+          const to = $<HTMLInputElement>('[data-date-to]', row).value;
+          return { from, to: to ? toIso(to) : from, hours: getSpan(row) };
         }),
       },
     };
@@ -202,7 +224,12 @@ const weeks = [0, 1];
   };
 
   form.addEventListener('change', (e) => {
-    const row = (e.target as HTMLElement).closest('.row');
+    const input = e.target as HTMLInputElement;
+    // A day chosen in the calendar goes into the text field beside it.
+    if (input.type === 'date' && input.value) {
+      $<HTMLInputElement>('input[type=text]', input.parentElement!).value = toDmy(input.value);
+    }
+    const row = input.closest('.row');
     if (row) syncRow(row);
   });
   form.addEventListener('input', (e) => {
@@ -214,6 +241,13 @@ const weeks = [0, 1];
   form.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
     target.closest('[data-remove]')?.closest('.row')?.remove();
+    const date = target.closest('[data-pick]')?.parentElement;
+    if (date) {
+      const text = $<HTMLInputElement>('input[type=text]', date);
+      const picker = $<HTMLInputElement>('input[type=date]', date);
+      picker.value = text.value && text.validity.valid ? toIso(text.value) : '';
+      picker.showPicker();
+    }
     const tab = target.closest<HTMLElement>('[data-week]');
     if (tab) {
       $$('[data-week]').forEach((b) => b.setAttribute('aria-pressed', String(b === tab)));
@@ -261,33 +295,32 @@ const weeks = [0, 1];
   }
   main {
     --green: #0b4b24;
-    --gold: #a8833f;
     --muted: #5d665e;
     --line: #d8cfbb;
-    max-width: 720px;
+    max-width: 1120px;
     margin: 0 auto;
     padding: 32px 20px 120px;
   }
-  .eyebrow {
-    margin: 0;
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--gold);
+  .logo {
+    display: block;
+    margin: 0 auto;
   }
-  h1,
+  form {
+    display: grid;
+    gap: 0 56px;
+  }
+  @media (min-width: 900px) {
+    form {
+      grid-template-columns: 1fr 1fr;
+      align-items: start;
+    }
+  }
   h2,
   h3 {
     margin: 0;
     font-family: 'Fraunces Variable', Georgia, serif;
     font-weight: 380;
     letter-spacing: -0.02em;
-  }
-  h1 {
-    margin-top: 6px;
-    font-size: 40px;
-    line-height: 1.05;
   }
   h2 {
     font-size: 28px;
@@ -297,7 +330,8 @@ const weeks = [0, 1];
     font-size: 21px;
   }
   section {
-    margin-top: 40px;
+    min-width: 0;
+    margin-top: 32px;
     padding-top: 28px;
     border-top: 1px solid var(--line);
   }
@@ -309,14 +343,13 @@ const weeks = [0, 1];
   }
   #status {
     margin-top: 24px;
+    text-align: center;
   }
   input,
   button {
     font: inherit;
     color: inherit;
   }
-  input[type='time'],
-  input[type='date'],
   input[type='text'] {
     padding: 8px 10px;
     border: 1px solid var(--line);
@@ -393,6 +426,37 @@ const weeks = [0, 1];
   input[type='text'] {
     width: 100%;
   }
+  .times input[type='text'] {
+    width: 4.5em;
+    text-align: center;
+  }
+  .date {
+    position: relative;
+    display: inline-block;
+  }
+  .date input[type='text'] {
+    width: 9em;
+    padding-right: 34px;
+  }
+  /* Invisible, but in place so the calendar opens under the field. */
+  .date input[type='date'] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .date button {
+    position: absolute;
+    top: 50%;
+    right: 4px;
+    display: flex;
+    padding: 6px;
+    transform: translateY(-50%);
+    border-radius: 6px;
+    background: none;
+    color: var(--muted);
+  }
   .hours {
     margin-top: 16px;
   }
@@ -417,8 +481,10 @@ const weeks = [0, 1];
     inset: auto 0 0;
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     gap: 16px;
-    padding: 14px 20px;
+    /* Same side edges as main. */
+    padding: 14px max(20px, calc((100% - 1120px) / 2 + 20px));
     border-top: 1px solid var(--line);
     background: #f6f1e7;
   }

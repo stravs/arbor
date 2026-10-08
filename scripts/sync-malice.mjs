@@ -1,6 +1,6 @@
 // Pulls the weekly lunch menu ("malice") from the old WordPress site and writes it
-// to src/data/malice.dev.json, the sample shown in `astro dev`. The live site reads
-// malice from KV (see worker/index.ts). Run: npm run sync:malice
+// to src/data/malice.dev.json, the sample that `npm run seed:malice` loads into KV.
+// The site reads malice from KV (see worker/index.ts). Run: npm run sync:malice
 import { writeFile } from 'node:fs/promises';
 
 const API = 'https://www.arborbled.si/wp-json/wp/v2/posts?per_page=20&_fields=slug,title,content';
