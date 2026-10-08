@@ -6,7 +6,7 @@ import OpenStatus from '../components/OpenStatus.astro';
 import { allergens, menu } from '../data/menu';
 import { contact, dayName, images, price, specials } from '../data/site';
 import { defaultLang, langNames, langPath, langs, t, type Lang } from '../i18n';
-import { defaultHours, exceptionLines, localNow, lunchWeek, shortDate, weekLines, type Content } from '../lib/content';
+import { defaultHours, localNow, lunchWeek, shortDate, weekLines, type Content } from '../lib/content';
 
 export function getStaticPaths() {
   return langs.map((lang) => ({
@@ -41,7 +41,7 @@ const lunchDays = [1, 2, 3, 4, 5]
   .filter((d) => !import.meta.env.DEV || d.items.length);
 const noLunch = !lunchDays.length || !import.meta.env.DEV;
 const openHours = weekLines(hours, lang, true);
-const allHours = [...weekLines(hours, lang), ...exceptionLines(hours, lang, today)];
+const allHours = weekLines(hours, lang);
 ---
 
 <Base lang={lang}>

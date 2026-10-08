@@ -4,7 +4,6 @@ import { createRemoteJWKSet, jwtVerify } from 'jose';
 import {
   addDays,
   defaultHours,
-  exceptionLines,
   localNow,
   lunchWeek,
   mergeDishes,
@@ -109,10 +108,7 @@ function fill({ malice, hours }: Content, lang: Lang) {
     })
     .on('[data-hours-lines]', {
       element(el) {
-        const openOnly = el.getAttribute('data-hours-lines') === 'open';
-        const lines = openOnly
-          ? weekLines(hours, lang, true)
-          : [...weekLines(hours, lang), ...exceptionLines(hours, lang, today)];
+        const lines = weekLines(hours, lang, el.getAttribute('data-hours-lines') === 'open');
         el.setInnerContent(lines.map(esc).join('<br />'), { html: true });
       },
     })
@@ -187,9 +183,9 @@ function span(v: unknown): Span | null {
   return [v[0], v[1]];
 }
 
-// Validates what the editor sent and drops what is over: past weeks of malice and past exceptions.
+// Validates what the editor sent and drops past weeks of malice.
 function parse(body: unknown, today: string): Content {
-  const input = (body ?? {}) as { malice?: unknown; hours?: { week?: unknown; exceptions?: unknown } };
+  const input = (body ?? {}) as { malice?: unknown; hours?: { week?: unknown } };
 
   const malice: Malice = {};
   const monday = workWeek(today)[0];
@@ -204,18 +200,7 @@ function parse(body: unknown, today: string): Content {
 
   const week = input.hours?.week;
   if (!Array.isArray(week) || week.length !== 7) throw new Error('Invalid opening hours');
-  const exceptions = input.hours?.exceptions ?? [];
-  if (!Array.isArray(exceptions) || exceptions.length > 50) throw new Error('Invalid exceptions');
-  const hours: Hours = {
-    week: week.map(span),
-    exceptions: exceptions
-      .map((e: { from?: unknown; to?: unknown; hours?: unknown }) => {
-        if (!isDate(e?.from) || !isDate(e?.to) || e.from > e.to) throw new Error('Invalid exception dates');
-        return { from: e.from, to: e.to, hours: span(e.hours ?? null) };
-      })
-      .filter((e) => e.to >= today)
-      .sort((a, b) => a.from.localeCompare(b.from)),
-  };
+  const hours: Hours = { week: week.map(span) };
 
   return { malice, hours };
 }

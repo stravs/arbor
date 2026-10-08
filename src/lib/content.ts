@@ -4,17 +4,9 @@
 // Opening and closing time in minutes from midnight, Europe/Ljubljana.
 export type Span = [opens: number, closes: number];
 
-export interface HoursException {
-  from: string;
-  to: string;
-  hours: Span | null;
-}
-
 export interface Hours {
   // Index 0 = Sunday. null = closed.
   week: (Span | null)[];
-  // Holidays, vacations and other dated changes. Dates are inclusive ISO days.
-  exceptions: HoursException[];
 }
 
 // ISO date → dishes of the day.
@@ -38,7 +30,6 @@ export const mergeDishes = (known: string[], malice: Malice) => {
 const regular: Span = [10 * 60, 22 * 60];
 export const defaultHours: Hours = {
   week: [null, regular, regular, regular, regular, regular, regular],
-  exceptions: [],
 };
 
 export const dayNames = {
@@ -63,8 +54,6 @@ const closedText: Record<Lang, (days: string, single: boolean) => string> = {
   it: (days) => `${days} chiuso`,
   de: (days) => `${days} geschlossen`,
 };
-
-const closedWord: Record<Lang, string> = { sl: 'zaprto', en: 'closed', it: 'chiuso', de: 'geschlossen' };
 
 // Dates
 
@@ -99,21 +88,17 @@ export const localNow = (at = new Date()) => {
   return { date, day: dayOf(date), mins: Number(p.hour) * 60 + Number(p.minute) };
 };
 
-export const shortDate = (iso: string | null, lang: Lang = 'sl') => {
+// "2026-10-08" → "8. 10."
+export const shortDate = (iso: string | null) => {
   if (!iso) return '';
   const [, m, d] = iso.split('-').map(Number);
-  return lang === 'sl' ? `${d}. ${m}.` : lang === 'de' ? `${d}.${m}.` : `${d}/${m}`;
+  return `${d}. ${m}.`;
 };
 
 // Hours
 
-export const hoursOn = (hours: Hours, date: string) => {
-  const exception = hours.exceptions.find((e) => e.from <= date && date <= e.to);
-  return exception ? exception.hours : hours.week[dayOf(date)];
-};
-
 export const isOpen = (hours: Hours, now: { date: string; mins: number }) => {
-  const span = hoursOn(hours, now.date);
+  const span = hours.week[dayOf(now.date)];
   return !!span && now.mins >= span[0] && now.mins < span[1];
 };
 
@@ -145,12 +130,3 @@ export const weekLines = (hours: Hours, lang: Lang, openOnly = false) => {
       return closedText[lang](single ? dayNames[lang][days[0]] : range, single);
     });
 };
-
-// Exceptions that are running or start within the next two months: "24. 12.–26. 12. · zaprto".
-export const exceptionLines = (hours: Hours, lang: Lang, today: string) =>
-  hours.exceptions
-    .filter((e) => e.to >= today && e.from <= addDays(today, 60))
-    .map((e) => {
-      const dates = e.from === e.to ? shortDate(e.from, lang) : `${shortDate(e.from, lang)}–${shortDate(e.to, lang)}`;
-      return `${dates} · ${e.hours ? spanText(e.hours, lang) : closedWord[lang]}`;
-    });
