@@ -14,7 +14,7 @@
   "vars": {
     // Cloudflare Access protecting /admin: Zero Trust team domain ("name.cloudflareaccess.com")
     // and the Access application's audience (AUD) tag. The editor stays closed until both are set.
-    "ACCESS_TEAM_DOMAIN": "",
-    "ACCESS_AUD": ""
+    "ACCESS_TEAM_DOMAIN": "silent-snow-2e7f.cloudflareaccess.com",
+    "ACCESS_AUD": "6cb32d3314a7fe13836452be71be446b29f9be77a88edb6edac0d6ac2e540687"
   }
 }
