@@ -1,6 +1,6 @@
 // Slovenian is the source locale: its shape defines what every other locale must provide.
 const sl = {
-  title: 'Restavracija Arbor Bled – sveža in lokalno pridelana hrana',
+  title: 'Restavracija Arbor Bled',
   description:
     'Restavracija Arbor v samem centru Bleda: italijanska, mediteranska in domača kuhinja, dnevne malice ter pogled na jezero, otok in grad.',
   nav: { about: 'Arbor', specials: 'Specialitete', menu: 'Meni', lunch: 'Malice', contact: 'Kontakt' },

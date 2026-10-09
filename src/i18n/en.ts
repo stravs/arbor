@@ -1,7 +1,7 @@
 import type { Dictionary } from './sl';
 
 const en: Dictionary = {
-  title: 'Restaurant Arbor Bled – fresh, locally sourced food',
+  title: 'Restaurant Arbor Bled',
   description:
     'Restaurant Arbor in the heart of Bled: Italian, Mediterranean and Slovenian cuisine, daily lunch menus and a view of the lake, the island and the castle.',
   nav: { about: 'Arbor', specials: 'Specials', menu: 'Menu', lunch: 'Lunch', contact: 'Contact' },
