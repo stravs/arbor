@@ -3,6 +3,11 @@
   "name": "arbor",
   "main": "worker/index.ts",
   "compatibility_date": "2026-10-07",
+  // The site lives at arborbled.si. www is attached too, so the Worker can send it there.
+  "routes": [
+    { "pattern": "arborbled.si", "custom_domain": true },
+    { "pattern": "www.arborbled.si", "custom_domain": true }
+  ],
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",

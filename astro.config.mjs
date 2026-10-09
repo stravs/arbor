@@ -46,7 +46,7 @@ const devEditor = {
 };
 
 export default defineConfig({
-  site: 'https://www.arborbled.si',
+  site: 'https://arborbled.si',
   trailingSlash: 'always',
   i18n: {
     locales,

@@ -121,6 +121,51 @@ test.describe('only the Slovenian page has malice', () => {
   });
 });
 
+// Where the menu's lunch link lands: the top of whatever it scrolled to sits at the top of the screen.
+const followLunchLink = async (page: Page) => {
+  const burger = page.locator('.burger');
+  if (await burger.isVisible()) await burger.click();
+  await navLink(page).click();
+};
+const atTop = (page: Page, target: string) =>
+  expect.poll(() => page.locator(target).evaluate((el) => Math.abs(Math.round(el.getBoundingClientRect().top)))).toBe(0);
+
+test.describe("the menu's lunch link", () => {
+  // Monday's lunch would sit right under the heading, so today is a later day here.
+  const friday = () => thisWeek()[4];
+  const visit = async (page: Page) => {
+    const noon = bledTime(friday(), '12:00');
+    await page.clock.setFixedTime(noon);
+    await page.setExtraHTTPHeaders({ 'x-now': noon.toISOString() });
+    await page.goto('/');
+  };
+
+  test.describe('on a phone', () => {
+    test.use({ viewport: { width: 390, height: 844 } });
+
+    test("goes to today's lunch", async ({ page, request }) => {
+      await save(request, sample(thisWeek()));
+      await visit(page);
+      await followLunchLink(page);
+      await atTop(page, '#malice [data-today]');
+    });
+
+    test('goes to the top of the section when today has no lunch', async ({ page, request }) => {
+      await save(request, sample(thisWeek().slice(0, 4)));
+      await visit(page);
+      await followLunchLink(page);
+      await atTop(page, '#malice');
+    });
+  });
+
+  test('goes to the top of the section on a wide screen', async ({ page, request }) => {
+    await save(request, sample(thisWeek()));
+    await visit(page);
+    await followLunchLink(page);
+    await atTop(page, '#malice');
+  });
+});
+
 test.describe('with a day left empty', () => {
   const malice = () => sample(thisWeek().filter((date) => date !== lunchDay()));
   test.beforeEach(({ request }) => save(request, malice()));

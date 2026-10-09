@@ -34,7 +34,13 @@ type Lang = (typeof pages)[keyof typeof pages];
 
 export default {
   async fetch(request, env) {
-    const { pathname } = new URL(request.url);
+    const url = new URL(request.url);
+    const { pathname } = url;
+    // www is only another way in: its pages go to the same address without it.
+    if (url.hostname.startsWith('www.')) {
+      url.hostname = url.hostname.slice(4);
+      return Response.redirect(url.href, 301);
+    }
     if (pathname === '/pero' || pathname.startsWith('/pero/')) {
       if (!(await authorized(request, env))) return new Response('Forbidden', { status: 403 });
       return pathname === '/pero/api/content' ? api(request, env) : env.ASSETS.fetch(request);

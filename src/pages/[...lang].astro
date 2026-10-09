@@ -301,7 +301,15 @@ const allHours = weekLines(hours, lang);
   const setOpen = (open: boolean) => burger?.setAttribute('aria-expanded', String(open));
   burger?.addEventListener('click', () => setOpen(burger.getAttribute('aria-expanded') !== 'true'));
   nav?.addEventListener('click', (e) => {
-    if ((e.target as HTMLElement).closest('a')) setOpen(false);
+    const link = (e.target as HTMLElement).closest('a');
+    if (!link) return;
+    setOpen(false);
+    // On a phone the week is one long column, so the lunch link goes straight to today's lunch.
+    // Without one for today it goes to the top of the section, as any other link does.
+    const today = document.querySelector('#malice [data-today]');
+    if (link.hash !== '#malice' || !today || !matchMedia('(max-width: 900px)').matches) return;
+    e.preventDefault();
+    today.scrollIntoView();
   });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') setOpen(false);
