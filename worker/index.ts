@@ -6,6 +6,7 @@ import {
   defaultHours,
   localNow,
   mergeDishes,
+  openingSpec,
   shortDate,
   shownWeek,
   weekLines,
@@ -91,6 +92,7 @@ function fill({ malice, hours }: Content, lang: Lang, { date: today, mins }: Ret
   // Lunch ends at 14:00. src/scripts/today.ts applies the same rule in the browser; deciding
   // it here as well means today's card is already in place when the page first paints.
   const lunchNow = !!malice[today]?.length && mins < 14 * 60;
+  let schema = '';
   const index = (el: Element, attr: string) => Number(el.getAttribute(attr)) - 1;
 
   return new HTMLRewriter()
@@ -138,6 +140,20 @@ function fill({ malice, hours }: Content, lang: Lang, { date: today, mins }: Ret
     .on('[data-open-status]', {
       element(el) {
         el.setAttribute('data-hours', JSON.stringify(hours));
+      },
+    })
+    // The same hours for search engines. The script's text can arrive in pieces.
+    .on('script[type="application/ld+json"]', {
+      text(chunk) {
+        schema += chunk.text;
+        if (!chunk.lastInTextNode) return chunk.remove();
+        try {
+          const filled = { ...JSON.parse(schema), openingHoursSpecification: openingSpec(hours) };
+          schema = JSON.stringify(filled).replaceAll('<', '\\u003c');
+        } catch {
+          // Not readable: leave it as it was built.
+        }
+        chunk.replace(schema, { html: true });
       },
     });
 }

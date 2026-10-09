@@ -1,6 +1,6 @@
 // How saved malice show on the public page: the week's section and today's card in the hero.
-import { expect, test, type Page } from '@playwright/test';
-import { dayNames, localNow, shortDate } from '../src/lib/content';
+import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { dayNames, defaultHours, localNow, openingSpec, shortDate, type Hours } from '../src/lib/content';
 import { bledTime, lunchDay, nextWeek, sample, save, thisWeek } from './helpers';
 
 // A visitor's own timezone must not matter: everything goes by the clock in Bled.
@@ -211,4 +211,34 @@ test('a dish is shown as typed, never as markup', async ({ page, request }) => {
   await expect(section(page).locator('[data-day][data-today] ol li')).toHaveText([dish]);
   await expect(section(page).locator('b')).toHaveCount(0);
   await expect(page).not.toHaveTitle('x');
+});
+
+test.describe('opening hours for search engines', () => {
+  const spec = async (request: APIRequestContext, path: string) => {
+    const html = await (await request.get(path)).text();
+    const json = html.match(/<script type="application\/ld\+json">(.*?)<\/script>/s)?.[1] ?? '';
+    return JSON.parse(json).openingHoursSpecification;
+  };
+
+  test('follow the hours saved in the editor, in every language', async ({ request }) => {
+    // Closed on Monday, a shorter Sunday, the other days as usual.
+    const week: Hours['week'] = [[720, 1200], null, ...defaultHours.week.slice(2)];
+    await save(request, {}, { week });
+    for (const path of ['/', '/en/', '/it/', '/de/']) {
+      expect(await spec(request, path), path).toEqual([
+        { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Sunday'], opens: '12:00', closes: '20:00' },
+        {
+          '@type': 'OpeningHoursSpecification',
+          dayOfWeek: ['Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+          opens: '10:00',
+          closes: '22:00',
+        },
+      ]);
+    }
+  });
+
+  test('are the regular ones again once those are saved', async ({ request }) => {
+    await save(request, {});
+    expect(await spec(request, '/')).toEqual(openingSpec(defaultHours));
+  });
 });

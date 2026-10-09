@@ -138,3 +138,21 @@ export const weekLines = (hours: Hours, lang: Lang, openOnly = false) => {
       return closedText[lang](single ? dayNames[lang][days[0]] : range, single);
     });
 };
+
+// The week for search engines (schema.org OpeningHoursSpecification), days with the same hours
+// in one entry. 600 → "10:00".
+const hhmm = (mins: number) => `${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`;
+const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+export const openingSpec = (hours: Hours) => {
+  const spans = [...new Set(hours.week.filter((span) => span !== null).map(String))];
+  return spans.map((key) => {
+    const [opens, closes] = key.split(',').map(Number);
+    return {
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: weekdays.filter((_, day) => String(hours.week[day]) === key),
+      opens: hhmm(opens),
+      closes: hhmm(closes),
+    };
+  });
+};
