@@ -100,3 +100,23 @@ test.describe('refuses', () => {
     expect((await load(request)).malice).toEqual(malice);
   });
 });
+
+test.describe('addresses of the old site', () => {
+  for (const [from, to] of [
+    ['/3-sreda/', '/#malice'],
+    ['/en/home/', '/'],
+    ['/en/home', '/'],
+    ['/politika-zasebnosti/', '/'],
+    ['/wp-content/uploads/sites/34/2019/06/Restaurant-Arbor-Bled_Menu_2019_V1.pdf', '/meni.pdf'],
+  ]) {
+    test(`${from} goes to ${to}`, async ({ request, baseURL }) => {
+      const response = await request.get(from, { maxRedirects: 0 });
+      expect(response.status()).toBe(301);
+      expect(response.headers().location).toBe(new URL(to, baseURL).href);
+    });
+  }
+
+  test('an address that never existed is still not found', async ({ request }) => {
+    expect((await request.get('/ni-te-strani/')).status()).toBe(404);
+  });
+});

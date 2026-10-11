@@ -33,14 +33,31 @@ const DISHES = 'dishes';
 const pages = { '/': 'sl', '/en/': 'en', '/it/': 'it', '/de/': 'de' } as const;
 type Lang = (typeof pages)[keyof typeof pages];
 
+// Pages of the old site, without the closing slash, and where each one lives now.
+const old: Record<string, string> = {
+  '/1-ponedeljek': '/#malice',
+  '/2-torek': '/#malice',
+  '/3-sreda': '/#malice',
+  '/4-cetrtek': '/#malice',
+  '/5-petek': '/#malice',
+  '/en/home': '/',
+  '/en/privacy-policy': '/en/',
+  '/politika-zasebnosti': '/',
+  '/comming-soon': '/',
+  '/sitemap.html': '/',
+  '/wp-content/uploads/sites/34/2019/06/Restaurant-Arbor-Bled_Menu_2019_V1.pdf': '/meni.pdf',
+};
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const { pathname } = url;
-    // www is only another way in: its pages go to the same address without it.
-    if (url.hostname.startsWith('www.')) {
-      url.hostname = url.hostname.slice(4);
-      return Response.redirect(url.href, 301);
+    // www is only another way in: its pages go to the same address without it. Addresses of
+    // the old WordPress site go to what replaced them, so search results and old links still land.
+    const moved = old[pathname.replace(/\/$/, '')];
+    if (moved || url.hostname.startsWith('www.')) {
+      url.hostname = url.hostname.replace(/^www\./, '');
+      return Response.redirect(moved ? new URL(moved, url).href : url.href, 301);
     }
     if (pathname === '/pero' || pathname.startsWith('/pero/')) {
       if (!(await authorized(request, env))) return new Response('Forbidden', { status: 403 });
