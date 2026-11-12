@@ -106,13 +106,20 @@ test.describe('addresses of the old site', () => {
     ['/3-sreda/', '/#malice'],
     ['/en/home/', '/'],
     ['/en/home', '/'],
-    ['/politika-zasebnosti/', '/'],
     ['/wp-content/uploads/sites/34/2019/06/Restaurant-Arbor-Bled_Menu_2019_V1.pdf', '/meni.pdf'],
   ]) {
     test(`${from} goes to ${to}`, async ({ request, baseURL }) => {
       const response = await request.get(from, { maxRedirects: 0 });
       expect(response.status()).toBe(301);
       expect(response.headers().location).toBe(new URL(to, baseURL).href);
+    });
+  }
+
+  for (const prefix of ['', '/en', '/it', '/de']) {
+    test(`${prefix}/politika-zasebnosti/ serves the privacy policy`, async ({ request }) => {
+      const response = await request.get(`${prefix}/politika-zasebnosti/`, { maxRedirects: 0 });
+      expect(response.status()).toBe(200);
+      expect(response.headers()['content-type']).toContain('text/html');
     });
   }
 
