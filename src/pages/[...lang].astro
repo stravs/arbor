@@ -6,6 +6,7 @@ import OpenStatus from '../components/OpenStatus.astro';
 import { allergens, menu } from '../data/menu';
 import { contact, dayName, images, price, specials } from '../data/site';
 import { defaultLang, langNames, langPath, langs, t, type Lang } from '../i18n';
+import { privacy, privacyPath } from '../i18n/privacy';
 import { defaultHours, localNow, shortDate, shownWeek, weekLines, type Content } from '../lib/content';
 
 export function getStaticPaths() {
@@ -291,6 +292,7 @@ const allHours = weekLines(hours, lang);
 
     <footer>
       <span>© Arbor d.o.o.</span>
+      <a href={privacyPath(lang)}>{privacy[lang].title}</a>
     </footer>
   </div>
 </Base>

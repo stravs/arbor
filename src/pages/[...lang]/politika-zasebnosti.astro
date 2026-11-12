@@ -1,0 +1,73 @@
+---
+import { Font } from 'astro:assets';
+import { defaultLang, langNames, langPath, langs, type Lang } from '../../i18n';
+import { privacy, privacyPath } from '../../i18n/privacy';
+
+export function getStaticPaths() {
+  return langs.map((lang) => ({
+    params: { lang: lang === defaultLang ? undefined : lang },
+    props: { lang },
+  }));
+}
+
+interface Props { lang: Lang; }
+const { lang } = Astro.props;
+const s = privacy[lang];
+
+const headingStyle = 'font-family: var(--font-fraunces), Georgia, serif; font-weight: 400; line-height: 1.2;';
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f6f1e7" />
+    <title>{s.title} | Arbor Bled</title>
+    <meta name="description" content={s.description} />
+    <link rel="canonical" href={new URL(privacyPath(lang), Astro.site)} />
+    {langs.map((l) => <link rel="alternate" hreflang={l} href={new URL(privacyPath(l), Astro.site)} />)}
+    <link rel="alternate" hreflang="x-default" href={new URL(privacyPath(defaultLang), Astro.site)} />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <Font cssVariable="--font-instrument-sans" />
+    <Font cssVariable="--font-fraunces" />
+  </head>
+  <body style="margin: 0; background: #f6f1e7; color: #1c241e; font: 18px/1.65 var(--font-instrument-sans), system-ui, sans-serif;">
+    <main style="max-width: 760px; margin: 0 auto; padding: 40px 24px 80px; overflow-wrap: anywhere;">
+      <a href={langPath(lang)} style="color: #0b4b24; text-underline-offset: 4px;">← Arbor</a>
+      <nav style="display: flex; flex-wrap: wrap; gap: 16px; margin-top: 20px;">
+        {langs.filter((l) => l !== lang).map((l) => (
+          <a href={privacyPath(l)} lang={l} hreflang={l} style="color: inherit;">{langNames[l]}</a>
+        ))}
+      </nav>
+      <h1 style={`${headingStyle} font-size: clamp(36px, 7vw, 56px); margin: 40px 0;`}>{s.title}</h1>
+
+      <section>
+        <h2 style={headingStyle}>1. {s.controller}</h2>
+        <p>
+          ARBOR D.O.O.<br />
+          Ljubljanska cesta 4, 4260 Bled<br />
+          {s.email}: <a href="mailto:arborbled@gmail.com" style="color: inherit;">arborbled@gmail.com</a><br />
+          {s.phone}: <a href="tel:+38645743033" style="color: inherit;">04 574 30 33</a>
+        </p>
+      </section>
+
+      <section style="margin-top: 36px;">
+        <h2 style={headingStyle}>2. {s.processing}</h2>
+        {s.processingText.map((paragraph) => <p>{paragraph}</p>)}
+      </section>
+
+      <section style="margin-top: 36px;">
+        <h2 style={headingStyle}>3. {s.cookies}</h2>
+        <p>{s.cookiesText}</p>
+      </section>
+
+      <section style="margin-top: 36px;">
+        <h2 style={headingStyle}>4. {s.rights}</h2>
+        <p>{s.rightsText}</p>
+        <p>{s.contact} <a href="mailto:arborbled@gmail.com" style="color: inherit;">arborbled@gmail.com</a>.</p>
+        <p>{s.complaint} (<a href="https://www.ip-rs.si/" style="color: inherit;">www.ip-rs.si</a>).</p>
+      </section>
+    </main>
+  </body>
+</html>
